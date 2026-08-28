@@ -62,17 +62,6 @@
     margin:0; text-transform:uppercase;
   }
   header.top h1 span{color:var(--tab-accent, var(--accent));}
-  .sync-dot{
-    width:9px; height:9px; border-radius:50%; background:var(--text-faint);
-    display:inline-block; margin-right:8px; transition:background .3s;
-  }
-  .sync-dot.online{background:var(--success); box-shadow:0 0 6px var(--success);}
-  .sync-dot.syncing{background:var(--accent-2); animation:pulse 1s infinite;}
-  .sync-status-line{font-size:12px; margin:10px 2px 0; min-height:16px; color:var(--text-dim);}
-  .sync-status-line.online{color:var(--success);}
-  .sync-status-line.syncing{color:var(--accent-2);}
-  .sync-status-line.offline{color:var(--text-faint);}
-  @keyframes pulse{50%{opacity:.3;}}
   .header-right{display:flex; align-items:center; gap:4px;}
   .icon-btn{
     background:none; border:none; color:var(--text-dim); width:38px; height:38px;
@@ -384,7 +373,7 @@
 <div id="app">
 
   <header class="top">
-    <h1><span class="sync-dot" id="syncDot"></span>GOD<span>LIKE</span></h1>
+    <h1>GOD<span>LIKE</span></h1>
     <div class="header-right">
       <button class="icon-btn" id="settingsBtn" aria-label="Settings">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -611,8 +600,6 @@
    DATA LAYER — PouchDB (local-first)
    ========================================================================= */
 const db = new PouchDB('lifeos');
-let remoteDB = null;
-let syncHandler = null;
 
 // Doc id prefixes used across the whole app (kept here so every tab agrees):
 //   exercise:<uuid>          exercise library entries (custom:true for user-created ones)
@@ -982,11 +969,11 @@ async function checkAndWarnThenProceed(muscles, proceedFn, cancelFn){
 }
 
 /* =========================================================================
-   SYNC LAYER — local Wi-Fi replication with a CouchDB/PC server
+   SETTINGS
    ========================================================================= */
 async function loadSettings(){
   try{ return await db.get('meta:settings'); }
-  catch(e){ return {_id:'meta:settings', type:'meta', remoteUrl:'', unit:'lbs'}; }
+  catch(e){ return {_id:'meta:settings', type:'meta', unit:'lbs'}; }
 }
 async function saveSettings(settings){
   try{
@@ -996,40 +983,78 @@ async function saveSettings(settings){
   return db.put(settings);
 }
 
-function setSyncDot(state){
-  // state: 'offline' | 'syncing' | 'online'
-  const dot = document.getElementById('syncDot');
-  dot.className = 'sync-dot' + (state==='offline' ? '' : ' '+state);
-  // If the Settings modal is open with its status line present, mirror the state there too —
-  // no-ops harmlessly when the modal isn't open (e.g. during boot-time sync attempts).
-  const statusEl = document.getElementById('syncStatusLine');
-  if(statusEl){
-    const labels = {offline:'Not connected', syncing:'Syncing…', online:'Synced'};
-    statusEl.textContent = labels[state] || '';
-    statusEl.className = 'sync-status-line ' + state;
+/* =========================================================================
+   BACKUP — export/import your data as a plain JSON file, entirely on-device.
+   This replaces the earlier CouchDB/live-sync approach: no server, no network setup,
+   no other device required. Export hands a file to iOS's Share Sheet (AirDrop, Files,
+   email, etc.) so you can park a copy anywhere; Import reads that same file back in,
+   which is your recovery path if the app/its storage ever gets wiped.
+   ========================================================================= */
+async function exportAllData(){
+  const res = await db.allDocs({include_docs:true});
+  const docs = res.rows.map(r=>r.doc).filter(d=> !d._id.startsWith('_design/'));
+  const payload = {app:'GODLIKE Life OS', exportedAt:new Date().toISOString(), docs};
+  const json = JSON.stringify(payload, null, 2);
+  const filename = `lifeos-backup-${todayStr()}.json`;
+  const blob = new Blob([json], {type:'application/json'});
+  const file = new File([blob], filename, {type:'application/json'});
+
+  // Prefer the native Share Sheet on phones — one tap to AirDrop, save to Files, email, etc.
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({files:[file], title:filename});
+      return;
+    }catch(e){ /* user backed out of the share sheet — fall through to a plain download */ }
   }
+  // Fallback for browsers without file-sharing support: a normal download link.
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
-async function startSync(){
-  const settings = await loadSettings();
-  if(!settings.remoteUrl){ setSyncDot('offline'); return; }
-  if(syncHandler) syncHandler.cancel();
+async function importDataFromFile(file){
+  let payload;
   try{
-    remoteDB = new PouchDB(settings.remoteUrl, {skip_setup:true});
-    setSyncDot('syncing');
-    syncHandler = db.sync(remoteDB, {
-      live:true, retry:true,
-      // Keep attachments (photos etc.) out of the live replication loop by default —
-      // see edge-case notes: fetch attachments on demand instead of syncing them eagerly.
-      attachments:false
-    }).on('change', ()=>{ setSyncDot('syncing'); refreshCurrentTab(); })
-      .on('paused', ()=> setSyncDot('online'))
-      .on('active', ()=> setSyncDot('syncing'))
-      .on('error', ()=> setSyncDot('offline'));
+    payload = JSON.parse(await file.text());
   }catch(e){
-    console.warn('Sync failed to start', e);
-    setSyncDot('offline');
+    await appAlert("That file isn't valid JSON — pick a backup that was exported from this app.");
+    return;
   }
+  const docs = Array.isArray(payload) ? payload : (payload.docs || []);
+  if(!docs.length){ await appAlert('No records found in that file.'); return; }
+
+  const ok = await appConfirm(
+    `Import ${docs.length} record(s) from this backup? Anything already on this device with a matching ID will be overwritten by the backup's version.`,
+    {confirmLabel:'Import', danger:false}
+  );
+  if(!ok) return;
+
+  let imported = 0, failed = 0;
+  for(const doc of docs){
+    const clean = {...doc};
+    delete clean._rev; // let PouchDB resolve the correct rev locally rather than trusting the file's
+    try{
+      await db.put(clean);
+      imported++;
+    }catch(e){
+      if(e.status === 409){
+        // Doc already exists locally — re-fetch its current rev and overwrite with the backup's copy.
+        try{
+          const existing = await db.get(clean._id);
+          clean._rev = existing._rev;
+          await db.put(clean);
+          imported++;
+        }catch(e2){ failed++; }
+      }else{
+        failed++;
+      }
+    }
+  }
+  await appAlert(`Import complete: ${imported} record(s) restored${failed ? `, ${failed} failed` : ''}.`);
+  await seedExercisesIfNeeded();
+  refreshCurrentTab();
 }
 
 /* =========================================================================
@@ -1105,7 +1130,7 @@ function appAlert(message, opts={}){
 }
 
 /* =========================================================================
-   SETTINGS MODAL (remote sync URL)
+   SETTINGS MODAL (units + export/import backup)
    ========================================================================= */
 document.getElementById('settingsBtn').addEventListener('click', async ()=>{
   const settings = await loadSettings();
@@ -1116,19 +1141,17 @@ document.getElementById('settingsBtn').addEventListener('click', async ()=>{
       <div class="chip ${settings.unit!=='kg' ? 'active':''}" data-u="lbs">Pounds (lb)</div>
       <div class="chip ${settings.unit==='kg' ? 'active':''}" data-u="kg">Kilograms (kg)</div>
     </div>
-    <label class="field-label">Local CouchDB / PC Sync URL</label>
-    <input type="text" id="remoteUrlInput" placeholder="http://192.168.1.20:5984/lifeos" value="${settings.remoteUrl||''}">
-    <p style="font-size:12px;color:var(--text-dim);margin:10px 2px 18px;">
-      Only reachable while on the same home Wi-Fi network. Leave blank to stay fully offline.
+    <label class="field-label">Backup</label>
+    <p style="font-size:12px;color:var(--text-dim);margin:6px 2px 14px;">
+      Your data lives only on this phone. Export it to a file whenever you want a backup —
+      AirDrop or save it somewhere safe. If this app or its data is ever lost, Import brings
+      it right back.
     </p>
-    <button class="btn btn-primary" id="saveSettingsBtn">Save &amp; Connect</button>
-    <button class="btn btn-ghost" id="syncNowBtn" style="margin-top:10px;">Sync Now</button>
-    <div class="sync-status-line" id="syncStatusLine"></div>
+    <button class="btn btn-primary" id="exportDataBtn">Export Data</button>
+    <button class="btn btn-ghost" id="importDataBtn" style="margin-top:10px;">Import Backup</button>
+    <input type="file" id="importFileInput" accept="application/json,.json" style="display:none;">
+    <button class="btn btn-primary" id="saveSettingsBtn" style="margin-top:22px;">Save</button>
   `);
-  // Reflect whatever the sync state already is the instant the modal opens, rather than
-  // waiting for the next sync event to populate the status line.
-  setSyncDot(document.getElementById('syncDot').classList.contains('online') ? 'online'
-    : document.getElementById('syncDot').classList.contains('syncing') ? 'syncing' : 'offline');
 
   document.getElementById('unitChipsSettings').addEventListener('click', (e)=>{
     const chip = e.target.closest('.chip');
@@ -1137,25 +1160,21 @@ document.getElementById('settingsBtn').addEventListener('click', async ()=>{
     chip.classList.add('active');
   });
   document.getElementById('saveSettingsBtn').onclick = async ()=>{
-    const url = document.getElementById('remoteUrlInput').value.trim();
     const unit = document.querySelector('#unitChipsSettings .chip.active').dataset.u;
-    await saveSettings({_id:'meta:settings', type:'meta', remoteUrl:url, unit});
+    await saveSettings({_id:'meta:settings', type:'meta', unit});
     currentUnit = unit;
     closeModal();
-    startSync();
     renderWorkoutsHome();
   };
-  // Manual sync trigger: persists whatever URL/unit is currently in the form (so there's no
-  // need to hit Save first), then kicks off startSync() without closing the modal, so the
-  // status line can show the live offline -> syncing -> online progression.
-  document.getElementById('syncNowBtn').onclick = async ()=>{
-    const url = document.getElementById('remoteUrlInput').value.trim();
-    if(!url){ await appAlert('Enter a sync URL first.'); return; }
-    const unit = document.querySelector('#unitChipsSettings .chip.active').dataset.u;
-    await saveSettings({_id:'meta:settings', type:'meta', remoteUrl:url, unit});
-    currentUnit = unit;
-    await startSync();
-  };
+  document.getElementById('exportDataBtn').addEventListener('click', exportAllData);
+  const importInput = document.getElementById('importFileInput');
+  document.getElementById('importDataBtn').addEventListener('click', ()=> importInput.click());
+  importInput.addEventListener('change', async ()=>{
+    if(importInput.files && importInput.files[0]){
+      await importDataFromFile(importInput.files[0]);
+      importInput.value = ''; // allow re-selecting the same file later if needed
+    }
+  });
 });
 
 /* =========================================================================
@@ -2659,7 +2678,6 @@ async function boot(){
     // Deferred: ask for permission from the Routines tab when a reminder is actually scheduled,
     // not on cold boot — asking up front gets reflexively denied.
   }
-  await startSync();
   await renderWorkoutsHome();
   window.__currentTab = 'workouts';
 
