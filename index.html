@@ -146,6 +146,22 @@
   .modal-handle{width:36px; height:4px; background:var(--surface-3); border-radius:2px; margin:0 auto 14px;}
   .modal-title{font-family:var(--font-display); text-transform:uppercase; font-size:17px; letter-spacing:0.5px; margin:0 0 16px;}
 
+  /* ---- Centered "picker" variant of the modal, used for the exercise pickers ----
+     Regular .modal-sheet is a bottom sheet sized to its content, which is exactly the
+     problem: with 1 search result it shrinks down near the bottom edge of the screen,
+     right where iOS parks the keyboard, and gets hidden behind it. This variant is a
+     fixed-height dialog centered in whatever space visualViewport says is actually
+     visible above the keyboard (see syncPickerViewport()), so its size and position
+     never depend on how many results are showing. */
+  .modal-backdrop.picker-modal{align-items:center; padding:16px;}
+  .modal-sheet.picker-sheet{
+    border-radius:20px; border-bottom:1px solid var(--border);
+    transform:scale(0.96); opacity:0; transition:opacity .2s, transform .2s;
+    display:flex; flex-direction:column; overflow-y:hidden; max-height:none;
+  }
+  .modal-backdrop.picker-modal.open .modal-sheet.picker-sheet{transform:scale(1); opacity:1;}
+  .modal-sheet.picker-sheet .picker-list{flex:1 1 auto; min-height:0; max-height:none; overflow-y:auto;}
+
   /* ============ APP DIALOG (confirm/alert replacement) ============ */
   .app-dialog-backdrop{
     position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:400; display:flex; align-items:center; justify-content:center;
@@ -251,6 +267,7 @@
   .ex-block-head{display:flex; justify-content:space-between; align-items:center; padding:14px 14px 10px;}
   .ex-block-head h3{margin:0; font-size:16px; font-weight:700;}
   .ex-block-head .muscle-tag{font-size:11px; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px;}
+  .pr-tag{font-size:11px; color:#D4AF37; font-weight:700; margin-top:2px;}
   .set-table{width:100%; border-collapse:collapse; padding:0 10px;}
   .set-table th{font-size:10px; color:var(--text-faint); text-transform:uppercase; padding:4px 6px; font-weight:600; text-align:center;}
   .set-table td{padding:4px 6px; text-align:center;}
@@ -264,6 +281,7 @@
     color:var(--text-faint); display:flex; align-items:center; justify-content:center; margin:0 auto;
   }
   .set-check.done{background:var(--success); border-color:var(--success); color:#08210F;}
+  .set-check.pr{background:#D4AF37; border-color:#D4AF37; font-size:15px;}
   .set-row-actions{padding:8px 14px 14px; display:flex; gap:8px;}
   .add-set-btn{
     flex:1; background:var(--surface-2); border:1px dashed var(--border); color:var(--text-dim);
@@ -278,6 +296,22 @@
   .picker-item .pi-main.pi-selected{background:rgba(255,42,59,0.10); border-radius:10px; margin:0 -8px; padding:0 8px;}
   .picker-item .pi-name{font-weight:600; font-size:15px;}
   .picker-item .pi-muscle{font-size:11px; color:var(--accent); text-transform:uppercase;}
+  .pi-last{font-size:11px; color:var(--text-dim); margin-top:2px;}
+  .pi-last.pi-pr{color:#D4AF37; font-weight:700;}
+
+  /* ---- Template exercise drag-to-reorder (Pointer Events; see enableTemplateExDrag) ---- */
+  .tex-row{display:flex; align-items:center; gap:2px;}
+  .tex-drag-handle{
+    display:flex; align-items:center; justify-content:center; touch-action:none; cursor:grab;
+    color:var(--text-faint); padding:4px 8px 4px 0; flex-shrink:0; -webkit-tap-highlight-color:transparent;
+  }
+  .tex-drag-handle:active{cursor:grabbing;}
+  .tex-drag-source{opacity:0;}
+  .tex-drag-clone{
+    border-radius:var(--radius-sm); background:var(--surface-2); box-shadow:0 10px 30px rgba(0,0,0,0.45);
+    transform:scale(1.02); opacity:0.98; padding-left:4px; padding-right:4px;
+  }
+
   .chip-row{display:flex; gap:8px; overflow-x:auto; padding-bottom:10px; margin-bottom:6px;}
   .chip{
     flex-shrink:0; padding:7px 14px; border-radius:20px; background:var(--surface-2); border:1px solid var(--border);
@@ -807,6 +841,78 @@ async function getTemplates(){
 }
 
 /* =========================================================================
+   PREVIOUS WEIGHT/REPS LOOKUP — derived from workout history, not a separate
+   store. See the design note above actuallyStartTemplate() for why: workout:
+   docs are already the single source of truth for what was actually lifted,
+   so "last time" is just "the most recent completed workout that matches",
+   found by scanning history (already sorted newest-first by _id). No cache
+   to invalidate, no second write path to keep in sync — if a past workout is
+   edited or deleted, the lookup result changes for free.
+   ========================================================================= */
+
+// Walks `history` (newest-first, as returned by getWorkoutHistory) for the most recent
+// completed set of `sets` logged against `exerciseId`. Pass `templateId` to restrict the
+// search to workouts started from that exact template ("last time I ran THIS template");
+// omit it (or pass null) to match the exercise in ANY workout ("last time I did THIS
+// exercise", regardless of template). A workout only counts as a match if at least one set
+// actually has a weight logged — an exercise added but never filled in doesn't count.
+function findLastPerformance(history, exerciseId, templateId){
+  for(const w of history){
+    if(templateId != null && w.templateId !== templateId) continue;
+    const ex = (w.exercises||[]).find(e=>e.exerciseId===exerciseId);
+    if(ex && (ex.sets||[]).some(s=>s.weight !== '' && s.weight != null)){
+      return { sets: ex.sets, finishedAt: w.finishedAt };
+    }
+  }
+  return null;
+}
+
+// Single pass over `history` building exerciseId -> most recent performance, for the exercise
+// pickers where we want a "Last: ..." hint next to every row without re-scanning history once
+// per exercise. First match wins per id since history is newest-first.
+function buildLastPerformedMap(history){
+  const map = new Map();
+  for(const w of history){
+    for(const ex of (w.exercises||[])){
+      if(map.has(ex.exerciseId)) continue;
+      if((ex.sets||[]).some(s=>s.weight !== '' && s.weight != null)){
+        map.set(ex.exerciseId, { sets: ex.sets, finishedAt: w.finishedAt });
+      }
+    }
+  }
+  return map;
+}
+
+// Compact "135×8, 135×8, 145×6" style summary in the currently displayed unit, skipping any
+// sets that were never filled in.
+function formatSetsSummary(sets){
+  const withWeight = (sets||[]).filter(s=>s.weight !== '' && s.weight != null);
+  if(!withWeight.length) return '';
+  return withWeight.map(s=>`${formatWeight(lbsToDisplay(Number(s.weight)))}×${s.reps || 0}`).join(', ');
+}
+
+// All-time PR (heaviest weight, not reps) per exercise, across ALL completed workout history —
+// unlike findLastPerformance()/buildLastPerformedMap() this can't stop at the first match, since
+// the record could have been set at any point, so it has to walk every doc it's given. Only sets
+// actually marked done count — a typed-in-but-unchecked weight was never actually lifted.
+// Ties don't overwrite an earlier PR (first one set stands), which only matters for finishedAt.
+function buildPRMap(history){
+  const map = new Map();
+  for(const w of history){
+    for(const ex of (w.exercises||[])){
+      for(const s of (ex.sets||[])){
+        if(!s.done || s.weight === '' || s.weight == null) continue;
+        const wt = Number(s.weight);
+        if(!wt) continue;
+        const cur = map.get(ex.exerciseId);
+        if(!cur || wt > cur.weight) map.set(ex.exerciseId, { weight: wt, finishedAt: w.finishedAt });
+      }
+    }
+  }
+  return map;
+}
+
+/* =========================================================================
    BODY WEIGHT LOG — bodyweight:<YYYY-MM-DD> docs, canonical value in lbs
    ========================================================================= */
 async function getWeightEntries(){
@@ -1085,8 +1191,38 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
 const modalBackdrop = document.getElementById('modalBackdrop');
 const modalSheet = document.getElementById('modalSheet');
 function openModal(html){
+  modalBackdrop.classList.remove('picker-modal');
+  modalSheet.classList.remove('picker-sheet');
+  modalBackdrop.style.height = ''; modalBackdrop.style.top = ''; modalSheet.style.height = '';
   modalSheet.innerHTML = '<div class="modal-handle"></div>' + html;
   modalBackdrop.classList.add('open');
+}
+
+// Centered, fixed-size dialog variant for the exercise pickers — see the .picker-modal/
+// .picker-sheet CSS comment for why the default bottom sheet doesn't work for these.
+// syncPickerViewport() keeps it sized/positioned to whatever's actually visible above the
+// iOS on-screen keyboard, using the visualViewport API (the layout viewport/100vh doesn't
+// reliably shrink when the keyboard opens in an "Add to Home Screen" standalone app).
+function openPickerModal(html){
+  modalBackdrop.classList.add('picker-modal');
+  modalSheet.classList.add('picker-sheet');
+  modalSheet.innerHTML = html;
+  modalBackdrop.classList.add('open');
+  syncPickerViewport();
+}
+function syncPickerViewport(){
+  if(!modalBackdrop.classList.contains('picker-modal')) return;
+  const vv = window.visualViewport;
+  const availH = vv ? vv.height : window.innerHeight;
+  if(vv){
+    modalBackdrop.style.height = vv.height + 'px';
+    modalBackdrop.style.top = vv.offsetTop + 'px';
+  }
+  modalSheet.style.height = Math.max(280, Math.min(availH * 0.85, 640)) + 'px';
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', syncPickerViewport);
+  window.visualViewport.addEventListener('scroll', syncPickerViewport);
 }
 function closeModal(){
   modalBackdrop.classList.remove('open');
@@ -1185,6 +1321,19 @@ let restTimerInterval = null;
 let restSecondsLeft = 0;
 let restTotalSeconds = 90;
 let currentUnit = 'lbs';       // 'lbs' | 'kg' — display-only; storage is always canonical lbs
+
+// exerciseId -> {weight, finishedAt} all-time PR, from completed history only. Loaded once per
+// session (see renderWorkoutsHome) rather than re-scanned on every render; renderExerciseBlocks()
+// layers in the CURRENT session's own done sets on top of this at render time, so a PR set just
+// now shows up immediately without needing to touch this map or re-query the DB mid-session.
+let prMap = new Map();
+async function refreshPRMap(){
+  // 5000 rather than the 500 used for "last performed" lookups: those stop at the first match
+  // so the window barely matters, but a PR search can't stop early — it has to see every
+  // completed workout to know the true all-time max. 5000 sessions is decades of training, so
+  // this is a ceiling in name only.
+  prMap = buildPRMap(await getWorkoutHistory(5000));
+}
 let liveTimerInterval = null;
 
 const LB_PER_KG = 2.2046226218;
@@ -1597,6 +1746,7 @@ async function renderWorkoutsHome(){
       </div>`;
     startLiveTimer(activeWorkout.startedAt);
     updateLiveVolume();
+    await refreshPRMap();
     renderExerciseBlocks();
     return;
   }
@@ -2054,6 +2204,12 @@ async function startTemplateWithChecks(templateId){
 }
 
 async function actuallyStartTemplate(tpl){
+  // Prefill each set with what was actually lifted last time, so you're editing/confirming
+  // a number instead of starting from blank. Prefer "last time I ran this exact template";
+  // if this template has never been completed before (or this exercise was just added to it),
+  // fall back to "last time I did this exercise at all" so a brand-new template still isn't
+  // starting from zero. See findLastPerformance() for the matching rules.
+  const history = await getWorkoutHistory(500);
   const doc = {
     _id: 'workout:' + new Date().toISOString(),
     type: 'workout',
@@ -2062,13 +2218,24 @@ async function actuallyStartTemplate(tpl){
     finishedAt: null,
     templateId: tpl._id,
     templateName: tpl.name,
-    exercises: (tpl.exercises || []).map(ex => ({
-      exerciseId: ex.exerciseId,
-      name: ex.name,
-      muscleGroups: ex.muscleGroups || [],
-      restSeconds: ex.restSeconds || 90,
-      sets: Array.from({length: ex.setCount || 3}, () => ({weight:'', reps:'', done:false}))
-    }))
+    exercises: (tpl.exercises || []).map(ex => {
+      const setCount = ex.setCount || 3;
+      const prev = findLastPerformance(history, ex.exerciseId, tpl._id)
+                || findLastPerformance(history, ex.exerciseId, null);
+      const prevSets = prev ? prev.sets.filter(s=>s.weight !== '' && s.weight != null) : [];
+      return {
+        exerciseId: ex.exerciseId,
+        name: ex.name,
+        muscleGroups: ex.muscleGroups || [],
+        restSeconds: ex.restSeconds || 90,
+        // Beyond the last logged set count, repeat its final set's weight/reps rather than
+        // going blank (mirrors the existing "+ Add Set" behavior of copying the prior row).
+        sets: Array.from({length: setCount}, (_, i) => {
+          const src = prevSets[i] || prevSets[prevSets.length - 1];
+          return { weight: src ? src.weight : '', reps: src ? src.reps : '', done:false };
+        })
+      };
+    })
   };
   await db.put(doc);
   renderWorkoutsHome();
@@ -2104,23 +2271,37 @@ function renderExerciseBlocks(){
     return;
   }
   container.innerHTML = activeWorkout.exercises.map((ex, exIdx)=>{
+    // All-time PR for the header line, and per-set "did this row just set it" for the trophy
+    // icon: walk sets in order starting from the historical best and bump it as we pass each
+    // done set that beats it, so multiple PRs in one session (e.g. two ascending top sets) each
+    // get their own trophy rather than only the final heaviest one.
+    const historyBest = prMap.get(ex.exerciseId)?.weight || 0;
+    let runningBest = historyBest;
     const rows = ex.sets.map((set, sIdx)=>{
       const dispWeight = (set.weight === '' || set.weight == null) ? '' : formatWeight(lbsToDisplay(Number(set.weight)));
+      const wt = Number(set.weight) || 0;
+      const isNewPR = set.done && wt > 0 && wt > runningBest;
+      if(isNewPR) runningBest = wt;
+      const checkContent = isNewPR
+        ? '🏆'
+        : (set.done ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' : '');
       return `
       <tr data-ex="${exIdx}" data-set="${sIdx}">
         <td class="set-num">${sIdx+1}</td>
         <td><input type="number" inputmode="decimal" class="weight-input" value="${dispWeight}" placeholder="0"></td>
         <td><input type="number" inputmode="numeric" class="reps-input" value="${set.reps ?? ''}" placeholder="0"></td>
-        <td><button class="set-check ${set.done ? 'done':''}" data-action="toggle-set">
-          ${set.done ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' : ''}
+        <td><button class="set-check ${set.done ? 'done':''} ${isNewPR ? 'pr':''}" data-action="toggle-set">
+          ${checkContent}
         </button></td>
       </tr>`;
     }).join('');
+    const prLabel = runningBest > 0 ? `<div class="pr-tag">🏆 PR: ${formatWeight(lbsToDisplay(runningBest))} ${unitLabel()}</div>` : '';
     return `<div class="ex-block" data-ex="${exIdx}">
       <div class="ex-block-head">
         <div>
           <h3>${ex.name}</h3>
           <div class="muscle-tag">${(ex.muscleGroups||[]).join(' · ')}</div>
+          ${prLabel}
           <div class="rest-control">
             <button data-action="rest-minus" data-ex="${exIdx}" aria-label="Decrease rest">−</button>
             <span class="rest-value">${ex.restSeconds || 90}s rest</span>
@@ -2223,6 +2404,13 @@ async function openExercisePicker(){
   const muscleGroups = [...new Set(exercises.flatMap(e=>e.muscleGroups||[]))].sort();
   let activeFilter = 'All';
   const selected = new Map(); // exerciseId -> {exerciseId, name, muscleGroups} — tap to toggle, "Add" commits the batch
+  // "Last: ..." hints below each name — general (any-workout) history, since this picker isn't
+  // tied to a specific template. See findLastPerformance()/buildLastPerformedMap().
+  // Shared fetch: "Last:" only needs the most recent match (findLastPerformance stops
+  // early), but the PR line needs the full picture, so fetch generously once and derive both.
+  const pickerHistory = await getWorkoutHistory(3000);
+  const lastMap = buildLastPerformedMap(pickerHistory);
+  const prMap = buildPRMap(pickerHistory);
 
   function pickIcon(isSelected){
     return isSelected
@@ -2238,12 +2426,16 @@ async function openExercisePicker(){
     );
     return filtered.map(ex=>{
       const isSelected = selected.has(ex._id);
+      const last = lastMap.get(ex._id);
+      const pr = prMap.get(ex._id);
       return `
       <div class="picker-item">
         <div class="pi-main ${isSelected ? 'pi-selected' : ''}" data-id="${ex._id}" data-name="${ex.name}" data-muscles="${(ex.muscleGroups||[]).join(',')}">
           <div style="min-width:0;">
             <div class="pi-name">${ex.name}</div>
             <div class="pi-muscle">${(ex.muscleGroups||[]).join(' · ')}</div>
+            ${last ? `<div class="pi-last">Last: ${formatSetsSummary(last.sets)} ${unitLabel()}</div>` : ''}
+            ${pr ? `<div class="pi-last pi-pr">🏆 PR: ${formatWeight(lbsToDisplay(pr.weight))} ${unitLabel()}</div>` : ''}
           </div>
           ${pickIcon(isSelected)}
         </div>
@@ -2254,7 +2446,7 @@ async function openExercisePicker(){
     }).join('') || `<div class="empty-state"><p>No matches</p></div>`;
   }
 
-  openModal(`
+  openPickerModal(`
     <div class="modal-title">Add Exercise</div>
     <input type="text" id="exSearchInput" placeholder="Search exercises…" style="margin-bottom:12px;">
     <div class="chip-row" id="muscleChips">
@@ -2315,9 +2507,13 @@ async function openExercisePicker(){
     const allMuscles = picks.flatMap(p=>p.muscleGroups);
     checkAndWarnThenProceed(allMuscles, async ()=>{
       picks.forEach(p=>{
+        // Prefill the single starting set from general exercise history (no template context
+        // here — this is an ad hoc add mid-workout), same rule as the picker's "Last:" hint.
+        const last = lastMap.get(p.exerciseId);
+        const lastSet = last && last.sets.find(s=>s.weight !== '' && s.weight != null);
         activeWorkout.exercises.push({
           exerciseId: p.exerciseId, name: p.name, muscleGroups: p.muscleGroups, restSeconds: 90,
-          sets: [{weight:'', reps:'', done:false}]
+          sets: [{weight: lastSet ? lastSet.weight : '', reps: lastSet ? lastSet.reps : '', done:false}]
         });
       });
       await persistActiveWorkout();
@@ -2437,6 +2633,7 @@ function renderTemplateModal(opts={}){
       renderTemplateModal();
     }
   });
+  enableTemplateExDrag(document.getElementById('templateExList'));
 
   if(opts.focusName || wasNameFocused){
     const nameInput = document.getElementById('templateNameInput');
@@ -2451,9 +2648,14 @@ function renderTemplateExList(){
   if(!templateDraft.exercises.length){
     return `<div class="empty-state" style="padding:20px 4px;"><p>No exercises added</p><div class="hint">Tap "Add Exercise" below</div></div>`;
   }
+  // data-i on the row itself is what enableTemplateExDrag() reads at drop time to figure out
+  // the new order — see that function for how the drag actually works.
   return templateDraft.exercises.map((ex,i)=>`
-    <div class="picker-item">
-      <div>
+    <div class="picker-item" data-i="${i}">
+      <button class="tex-drag-handle" data-action="tex-drag" aria-label="Drag to reorder">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.6"/><circle cx="16" cy="6" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="16" cy="12" r="1.6"/><circle cx="8" cy="18" r="1.6"/><circle cx="16" cy="18" r="1.6"/></svg>
+      </button>
+      <div style="min-width:0; flex:1;">
         <div class="pi-name">${ex.name}</div>
         <div class="pi-muscle">${(ex.muscleGroups||[]).join(' · ')} · ${ex.setCount} sets</div>
         <div class="rest-control">
@@ -2472,11 +2674,93 @@ function renderTemplateExList(){
     </div>`).join('');
 }
 
+// Drag-to-reorder for the template exercise list. Uses Pointer Events (not HTML5 drag-and-drop,
+// which is unreliable on iOS Safari touch) and a fixed-position visual clone that follows the
+// finger, while the real row is hidden-but-still-in-flow and gets physically moved to the drop
+// position as you drag over other rows — so the browser handles the "everything else shifts
+// out of the way" reflow for free, no manual transform math on the other rows needed.
+// Re-run after every render since `container` is a fresh element each time (openModal replaces
+// innerHTML), same as the other templateExList listeners above.
+function enableTemplateExDrag(container){
+  let drag = null;
+
+  function rows(){
+    return Array.from(container.querySelectorAll(':scope > .picker-item'));
+  }
+
+  container.addEventListener('pointerdown', (e)=>{
+    const handle = e.target.closest('.tex-drag-handle');
+    if(!handle) return;
+    const item = handle.closest('.picker-item');
+    e.preventDefault();
+    const rect = item.getBoundingClientRect();
+    const clone = item.cloneNode(true);
+    clone.classList.add('tex-drag-clone');
+    Object.assign(clone.style, {
+      position:'fixed', left:rect.left+'px', top:rect.top+'px',
+      width:rect.width+'px', height:rect.height+'px', margin:'0', pointerEvents:'none', zIndex:9999
+    });
+    document.body.appendChild(clone);
+    item.classList.add('tex-drag-source'); // hidden but keeps its slot — acts as the placeholder
+    drag = { item, clone, pointerId: e.pointerId, grabOffsetY: e.clientY - rect.top };
+    handle.setPointerCapture(e.pointerId);
+  });
+
+  container.addEventListener('pointermove', (e)=>{
+    if(!drag || e.pointerId !== drag.pointerId) return;
+    e.preventDefault();
+    const containerRect = container.getBoundingClientRect();
+    const itemRect = drag.item.getBoundingClientRect();
+    let newTop = e.clientY - drag.grabOffsetY;
+    newTop = Math.max(containerRect.top, Math.min(containerRect.bottom - itemRect.height, newTop));
+    drag.clone.style.top = newTop + 'px';
+
+    const edge = 28;
+    if(e.clientY < containerRect.top + edge) container.scrollTop -= 8;
+    else if(e.clientY > containerRect.bottom - edge) container.scrollTop += 8;
+
+    const cloneRect = drag.clone.getBoundingClientRect();
+    const cloneMid = cloneRect.top + cloneRect.height / 2;
+    let target = null, after = false;
+    for(const el of rows()){
+      if(el === drag.item) continue;
+      const r = el.getBoundingClientRect();
+      const mid = r.top + r.height / 2;
+      if(cloneMid < mid){ target = el; after = false; break; }
+      target = el; after = true;
+    }
+    if(target){
+      if(after) target.after(drag.item);
+      else target.before(drag.item);
+    }
+  });
+
+  function endDrag(e){
+    if(!drag || (e && e.pointerId !== drag.pointerId)) return;
+    drag.clone.remove();
+    drag.item.classList.remove('tex-drag-source');
+    const newOrder = rows().map(el => +el.dataset.i);
+    templateDraft.exercises = newOrder.map(i => templateDraft.exercises[i]);
+    drag = null;
+    renderTemplateModal(); // full re-render to rebind every data-i cleanly, same pattern as every other mutation here
+  }
+  container.addEventListener('pointerup', endDrag);
+  container.addEventListener('pointercancel', endDrag);
+}
+
 async function openTemplateExercisePicker(){
   const exercises = await getExercises();
   const muscleGroups = [...new Set(exercises.flatMap(e=>e.muscleGroups||[]))].sort();
   let activeFilter = 'All';
   const selected = new Map(); // exerciseId -> {exerciseId, name, muscleGroups} — tap to toggle, "Add" commits the batch
+  // "Last: ..." hints — general (any-workout) history. This is the template *builder*, so there's
+  // no completed run of this exact template to prefer yet; that template-specific lookup happens
+  // later, at start time, in actuallyStartTemplate().
+  // Shared fetch: "Last:" only needs the most recent match (findLastPerformance stops
+  // early), but the PR line needs the full picture, so fetch generously once and derive both.
+  const pickerHistory = await getWorkoutHistory(3000);
+  const lastMap = buildLastPerformedMap(pickerHistory);
+  const prMap = buildPRMap(pickerHistory);
 
   function pickIcon(isSelected){
     return isSelected
@@ -2492,12 +2776,16 @@ async function openTemplateExercisePicker(){
     );
     return filtered.map(ex=>{
       const isSelected = selected.has(ex._id);
+      const last = lastMap.get(ex._id);
+      const pr = prMap.get(ex._id);
       return `
       <div class="picker-item">
         <div class="pi-main ${isSelected ? 'pi-selected' : ''}" data-id="${ex._id}" data-name="${ex.name}" data-muscles="${(ex.muscleGroups||[]).join(',')}">
           <div style="min-width:0;">
             <div class="pi-name">${ex.name}</div>
             <div class="pi-muscle">${(ex.muscleGroups||[]).join(' · ')}</div>
+            ${last ? `<div class="pi-last">Last: ${formatSetsSummary(last.sets)} ${unitLabel()}</div>` : ''}
+            ${pr ? `<div class="pi-last pi-pr">🏆 PR: ${formatWeight(lbsToDisplay(pr.weight))} ${unitLabel()}</div>` : ''}
           </div>
           ${pickIcon(isSelected)}
         </div>
@@ -2508,7 +2796,7 @@ async function openTemplateExercisePicker(){
     }).join('') || `<div class="empty-state"><p>No matches</p></div>`;
   }
 
-  openModal(`
+  openPickerModal(`
     <div class="modal-title">Add Exercise</div>
     <input type="text" id="exSearchInput" placeholder="Search exercises…" style="margin-bottom:12px;">
     <div class="chip-row" id="muscleChips">
