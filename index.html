@@ -160,6 +160,11 @@
     display:flex; flex-direction:column; overflow-y:hidden; max-height:none;
   }
   .modal-backdrop.picker-modal.open .modal-sheet.picker-sheet{transform:scale(1); opacity:1;}
+  /* Every direct child (title, search input, chip row, footer buttons) keeps its natural size —
+     only the list is allowed to flex/shrink. Without this, when total content is slightly
+     taller than the fixed sheet height, flexbox shrinks EVERY child by default (including the
+     chip row), squashing the pill-shaped chips and pushing their text outside the bubble. */
+  .modal-sheet.picker-sheet > *{flex-shrink:0;}
   .modal-sheet.picker-sheet .picker-list{flex:1 1 auto; min-height:0; max-height:none; overflow-y:auto;}
 
   /* ============ APP DIALOG (confirm/alert replacement) ============ */
@@ -299,15 +304,15 @@
   .pi-last{font-size:11px; color:var(--text-dim); margin-top:2px;}
   .pi-last.pi-pr{color:#D4AF37; font-weight:700;}
 
-  /* ---- Template exercise drag-to-reorder (Pointer Events; see enableTemplateExDrag) ---- */
-  .tex-row{display:flex; align-items:center; gap:2px;}
-  .tex-drag-handle{
+  /* ---- Drag-to-reorder (Pointer Events; see enableDragReorder). Used for the template builder's
+     exercise list AND the active-workout exercise cards ("add it everywhere"). ---- */
+  .drag-handle{
     display:flex; align-items:center; justify-content:center; touch-action:none; cursor:grab;
     color:var(--text-faint); padding:4px 8px 4px 0; flex-shrink:0; -webkit-tap-highlight-color:transparent;
   }
-  .tex-drag-handle:active{cursor:grabbing;}
-  .tex-drag-source{opacity:0;}
-  .tex-drag-clone{
+  .drag-handle:active{cursor:grabbing;}
+  .drag-source{opacity:0;}
+  .drag-clone{
     border-radius:var(--radius-sm); background:var(--surface-2); box-shadow:0 10px 30px rgba(0,0,0,0.45);
     transform:scale(1.02); opacity:0.98; padding-left:4px; padding-right:4px;
   }
@@ -1226,6 +1231,15 @@ if(window.visualViewport){
 }
 function closeModal(){
   modalBackdrop.classList.remove('open');
+  // Safety net for abandoning a template create/edit without saving (e.g. backing out of the
+  // "Save this workout as a template?" flow after finishing an ad hoc workout, where the
+  // underlying view is already stale — the workout was marked completed before this modal
+  // opened). saveTemplateDraft() already nulls templateDraft before calling closeModal() on a
+  // successful save, so this doesn't double-fire there.
+  if(templateDraft){
+    templateDraft = null;
+    renderWorkoutsHome();
+  }
 }
 modalBackdrop.addEventListener('click', (e)=>{ if(e.target===modalBackdrop) closeModal(); });
 
@@ -1802,8 +1816,7 @@ async function renderWorkoutsHome(){
       const volLbs = (typeof w.volume === 'number') ? w.volume : computeVolumeLbs(w.exercises, false);
       const dateLabel = new Date(w.finishedAt).toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'});
       const durLabel = (typeof w.durationSeconds === 'number') ? ' · ' + formatHMS(w.durationSeconds) : '';
-      return `<div class="history-item">
-        <div>
+      return `<div class="history-item" data-wid="${w._id}" style="cursor:pointer;">        <div>
           <div class="h-date">${dateLabel}</div>
           <div class="h-sub">${(w.exercises||[]).length} exercises${w.templateName ? ' · '+w.templateName : ''}${durLabel}</div>
         </div>
@@ -2098,18 +2111,49 @@ document.getElementById('startWorkoutBtn').addEventListener('click', async ()=>{
 
 document.getElementById('historyList').addEventListener('click', async (e)=>{
   const delBtn = e.target.closest('[data-action="delete-workout"]');
-  if(!delBtn) return;
-  if(!(await appConfirm('Delete this workout entry? This cannot be undone.'))) return;
-  try{
-    const doc = await db.get(delBtn.dataset.wid);
-    await db.remove(doc);
-    // No extra "recalculate the heat map" step needed: renderWorkoutsHome() below re-runs
-    // renderHeatmap() -> refreshMuscleStats(), which re-scans workout history from scratch —
-    // the just-deleted doc simply won't be there anymore, so any muscle hits it contributed
-    // are automatically reduced/removed on this next paint.
-  }catch(err){ console.warn('Delete workout failed', err); }
-  renderWorkoutsHome();
+  if(delBtn){
+    if(!(await appConfirm('Delete this workout entry? This cannot be undone.'))) return;
+    try{
+      const doc = await db.get(delBtn.dataset.wid);
+      await db.remove(doc);
+      // No extra "recalculate the heat map" step needed: renderWorkoutsHome() below re-runs
+      // renderHeatmap() -> refreshMuscleStats(), which re-scans workout history from scratch —
+      // the just-deleted doc simply won't be there anymore, so any muscle hits it contributed
+      // are automatically reduced/removed on this next paint.
+    }catch(err){ console.warn('Delete workout failed', err); }
+    renderWorkoutsHome();
+    return;
+  }
+  const item = e.target.closest('.history-item');
+  if(item) openWorkoutSummary(item.dataset.wid);
 });
+
+// Read-only "what did I actually do that day" popup — sets/reps per exercise for one past
+// session. Intentionally just a modal, not a full screen: this is for a quick glance while
+// browsing history, not for editing (a finished workout is done, no reason to make it editable).
+async function openWorkoutSummary(workoutId){
+  const w = await db.get(workoutId);
+  const dateLabel = new Date(w.finishedAt).toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'});
+  const metaBits = [dateLabel];
+  if(typeof w.durationSeconds === 'number') metaBits.push(formatHMS(w.durationSeconds));
+  openModal(`
+    <div class="modal-title">${w.templateName || 'Workout'}</div>
+    <div style="font-size:12px; color:var(--text-dim); margin:-10px 0 16px;">${metaBits.join(' · ')}</div>
+    <div class="picker-list" style="max-height:55vh;">
+      ${(w.exercises||[]).map(ex=>{
+        const summary = formatSetsSummary(ex.sets);
+        return `
+        <div class="picker-item" style="display:block;">
+          <div class="pi-name">${ex.name}</div>
+          <div class="pi-muscle" style="margin-bottom:4px;">${(ex.muscleGroups||[]).join(' · ')}</div>
+          <div style="font-size:13px; color:var(--text-dim);">${summary ? summary + ' ' + unitLabel() : 'No sets logged'}</div>
+        </div>`;
+      }).join('') || `<div class="empty-state"><p>No exercises logged</p></div>`}
+    </div>
+    <button class="btn btn-ghost" id="summaryCloseBtn" style="margin-top:16px;">Close</button>
+  `);
+  document.getElementById('summaryCloseBtn').addEventListener('click', closeModal);
+}
 
 document.getElementById('templatesList').addEventListener('click', async (e)=>{
   const startBtn = e.target.closest('[data-action="start-template"]');
@@ -2257,6 +2301,23 @@ document.getElementById('finishWorkoutBtn').addEventListener('click', async ()=>
   doc.durationSeconds = Math.floor((doc.finishedAt - doc.startedAt) / 1000);
   doc.volume = computeVolumeLbs(doc.exercises, true); // canonical lbs, converted for display at render time
   await db.put(doc);
+  // Ad hoc workouts (started via the plain "+ Start Workout" button, so no templateId) have
+  // nowhere for their exercise list to live for next time. Offer to turn the session just
+  // finished into a reusable template rather than letting it disappear into history.
+  if(!doc.templateId && doc.exercises.length){
+    const wantsTemplate = await appConfirm('Save this workout as a reusable template?', {confirmLabel:'Save as Template', danger:false});
+    if(wantsTemplate){
+      templateDraft = {
+        name: '',
+        exercises: doc.exercises.map(ex=>({
+          exerciseId: ex.exerciseId, name: ex.name, muscleGroups: ex.muscleGroups || [],
+          setCount: ex.sets.length || 3, restSeconds: ex.restSeconds || 90
+        }))
+      };
+      renderTemplateModal({focusName:true}); // saveTemplateDraft() calls renderWorkoutsHome() on save/close
+      return;
+    }
+  }
   renderWorkoutsHome();
 });
 
@@ -2298,14 +2359,19 @@ function renderExerciseBlocks(){
     const prLabel = runningBest > 0 ? `<div class="pr-tag">🏆 PR: ${formatWeight(lbsToDisplay(runningBest))} ${unitLabel()}</div>` : '';
     return `<div class="ex-block" data-ex="${exIdx}">
       <div class="ex-block-head">
-        <div>
-          <h3>${ex.name}</h3>
-          <div class="muscle-tag">${(ex.muscleGroups||[]).join(' · ')}</div>
-          ${prLabel}
-          <div class="rest-control">
-            <button data-action="rest-minus" data-ex="${exIdx}" aria-label="Decrease rest">−</button>
-            <span class="rest-value">${ex.restSeconds || 90}s rest</span>
-            <button data-action="rest-plus" data-ex="${exIdx}" aria-label="Increase rest">+</button>
+        <div style="display:flex; align-items:flex-start; gap:4px; min-width:0; flex:1;">
+          <button class="drag-handle" data-action="ex-drag" aria-label="Drag to reorder" style="margin-top:2px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.6"/><circle cx="16" cy="6" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="16" cy="12" r="1.6"/><circle cx="8" cy="18" r="1.6"/><circle cx="16" cy="18" r="1.6"/></svg>
+          </button>
+          <div style="min-width:0;">
+            <h3>${ex.name}</h3>
+            <div class="muscle-tag">${(ex.muscleGroups||[]).join(' · ')}</div>
+            ${prLabel}
+            <div class="rest-control">
+              <button data-action="rest-minus" data-ex="${exIdx}" aria-label="Decrease rest">−</button>
+              <span class="rest-value">${ex.restSeconds || 90}s rest</span>
+              <button data-action="rest-plus" data-ex="${exIdx}" aria-label="Increase rest">+</button>
+            </div>
           </div>
         </div>
         <button class="icon-btn" data-action="remove-ex" data-ex="${exIdx}" aria-label="Remove exercise">
@@ -2395,6 +2461,22 @@ async function persistActiveWorkout(){
   activeWorkout._rev = res.rev;
   updateLiveVolume();
 }
+
+// Drag-to-reorder for the active-workout exercise cards — same mechanism as the template
+// builder's list (see enableDragReorder). Wired up once here rather than per-render like the
+// template list, because #exerciseBlocks itself is a persistent DOM node (only its innerHTML
+// is replaced on each renderExerciseBlocks() call) — attaching once avoids piling up duplicate
+// listeners. Cards scroll with the page (#mainView), not their own container, so that's passed
+// as the scroller for edge auto-scroll.
+enableDragReorder(
+  document.getElementById('exerciseBlocks'), '.drag-handle', '.ex-block', 'ex',
+  (newOrder)=>{
+    activeWorkout.exercises = newOrder.map(i => activeWorkout.exercises[i]);
+    persistActiveWorkout();
+    renderExerciseBlocks();
+  },
+  document.getElementById('mainView')
+);
 
 /* ---------- Add Exercise picker ---------- */
 document.getElementById('addExerciseBtn').addEventListener('click', openExercisePicker);
@@ -2648,11 +2730,11 @@ function renderTemplateExList(){
   if(!templateDraft.exercises.length){
     return `<div class="empty-state" style="padding:20px 4px;"><p>No exercises added</p><div class="hint">Tap "Add Exercise" below</div></div>`;
   }
-  // data-i on the row itself is what enableTemplateExDrag() reads at drop time to figure out
+  // data-i on the row itself is what enableDragReorder() reads at drop time to figure out
   // the new order — see that function for how the drag actually works.
   return templateDraft.exercises.map((ex,i)=>`
     <div class="picker-item" data-i="${i}">
-      <button class="tex-drag-handle" data-action="tex-drag" aria-label="Drag to reorder">
+      <button class="drag-handle" data-action="tex-drag" aria-label="Drag to reorder">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.6"/><circle cx="16" cy="6" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="16" cy="12" r="1.6"/><circle cx="8" cy="18" r="1.6"/><circle cx="16" cy="18" r="1.6"/></svg>
       </button>
       <div style="min-width:0; flex:1;">
@@ -2674,34 +2756,44 @@ function renderTemplateExList(){
     </div>`).join('');
 }
 
-// Drag-to-reorder for the template exercise list. Uses Pointer Events (not HTML5 drag-and-drop,
-// which is unreliable on iOS Safari touch) and a fixed-position visual clone that follows the
-// finger, while the real row is hidden-but-still-in-flow and gets physically moved to the drop
-// position as you drag over other rows — so the browser handles the "everything else shifts
-// out of the way" reflow for free, no manual transform math on the other rows needed.
-// Re-run after every render since `container` is a fresh element each time (openModal replaces
-// innerHTML), same as the other templateExList listeners above.
-function enableTemplateExDrag(container){
+// Generic Pointer-Events drag-to-reorder, shared by the template builder's exercise list and the
+// active-workout exercise cards. Not HTML5 drag-and-drop, which is unreliable on iOS Safari touch:
+// instead a fixed-position visual clone follows the finger, while the real item is hidden-but-
+// still-in-flow and gets physically moved to the drop position as you drag over other items — so
+// the browser handles the "everything else shifts out of the way" reflow for free, no manual
+// transform math on the other rows needed.
+//   container      — the list's parent element; its direct children matching itemSelector are
+//                     the draggable rows (each needs a stable data-<dataAttr> index attribute).
+//   handleSelector — what you have to grab to start a drag (e.g. '.drag-handle').
+//   itemSelector   — the draggable row itself (e.g. '.picker-item', '.ex-block').
+//   dataAttr       — which data-* attribute on each row holds its original index ('i' or 'ex').
+//   onDrop(newOrder) — called with the new order as an array of ORIGINAL indices; the caller
+//                     is responsible for reassigning its own array and re-rendering/persisting.
+//   scrollContainer — the actual scrollable ancestor to nudge when dragging near an edge, if
+//                     different from `container` itself (e.g. the page scrolls, not the list).
+function enableDragReorder(container, handleSelector, itemSelector, dataAttr, onDrop, scrollContainer){
+  const scroller = scrollContainer || container;
   let drag = null;
 
   function rows(){
-    return Array.from(container.querySelectorAll(':scope > .picker-item'));
+    return Array.from(container.querySelectorAll(':scope > ' + itemSelector));
   }
 
   container.addEventListener('pointerdown', (e)=>{
-    const handle = e.target.closest('.tex-drag-handle');
+    const handle = e.target.closest(handleSelector);
     if(!handle) return;
-    const item = handle.closest('.picker-item');
+    const item = handle.closest(itemSelector);
+    if(!item || item.parentElement !== container) return;
     e.preventDefault();
     const rect = item.getBoundingClientRect();
     const clone = item.cloneNode(true);
-    clone.classList.add('tex-drag-clone');
+    clone.classList.add('drag-clone');
     Object.assign(clone.style, {
       position:'fixed', left:rect.left+'px', top:rect.top+'px',
       width:rect.width+'px', height:rect.height+'px', margin:'0', pointerEvents:'none', zIndex:9999
     });
     document.body.appendChild(clone);
-    item.classList.add('tex-drag-source'); // hidden but keeps its slot — acts as the placeholder
+    item.classList.add('drag-source'); // hidden but keeps its slot — acts as the placeholder
     drag = { item, clone, pointerId: e.pointerId, grabOffsetY: e.clientY - rect.top };
     handle.setPointerCapture(e.pointerId);
   });
@@ -2709,15 +2801,15 @@ function enableTemplateExDrag(container){
   container.addEventListener('pointermove', (e)=>{
     if(!drag || e.pointerId !== drag.pointerId) return;
     e.preventDefault();
-    const containerRect = container.getBoundingClientRect();
+    const scrollerRect = scroller.getBoundingClientRect();
     const itemRect = drag.item.getBoundingClientRect();
     let newTop = e.clientY - drag.grabOffsetY;
-    newTop = Math.max(containerRect.top, Math.min(containerRect.bottom - itemRect.height, newTop));
+    newTop = Math.max(scrollerRect.top, Math.min(scrollerRect.bottom - itemRect.height, newTop));
     drag.clone.style.top = newTop + 'px';
 
     const edge = 28;
-    if(e.clientY < containerRect.top + edge) container.scrollTop -= 8;
-    else if(e.clientY > containerRect.bottom - edge) container.scrollTop += 8;
+    if(e.clientY < scrollerRect.top + edge) scroller.scrollTop -= 8;
+    else if(e.clientY > scrollerRect.bottom - edge) scroller.scrollTop += 8;
 
     const cloneRect = drag.clone.getBoundingClientRect();
     const cloneMid = cloneRect.top + cloneRect.height / 2;
@@ -2738,14 +2830,20 @@ function enableTemplateExDrag(container){
   function endDrag(e){
     if(!drag || (e && e.pointerId !== drag.pointerId)) return;
     drag.clone.remove();
-    drag.item.classList.remove('tex-drag-source');
-    const newOrder = rows().map(el => +el.dataset.i);
-    templateDraft.exercises = newOrder.map(i => templateDraft.exercises[i]);
+    drag.item.classList.remove('drag-source');
+    const newOrder = rows().map(el => +el.dataset[dataAttr]);
     drag = null;
-    renderTemplateModal(); // full re-render to rebind every data-i cleanly, same pattern as every other mutation here
+    onDrop(newOrder);
   }
   container.addEventListener('pointerup', endDrag);
   container.addEventListener('pointercancel', endDrag);
+}
+
+function enableTemplateExDrag(container){
+  enableDragReorder(container, '.drag-handle', '.picker-item', 'i', (newOrder)=>{
+    templateDraft.exercises = newOrder.map(i => templateDraft.exercises[i]);
+    renderTemplateModal(); // full re-render to rebind every data-i cleanly, same pattern as every other mutation here
+  });
 }
 
 async function openTemplateExercisePicker(){
