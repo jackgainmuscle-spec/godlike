@@ -115,7 +115,11 @@
   .btn-ghost{background:var(--surface-2); color:var(--text); border:1px solid var(--border);}
   .btn-ghost:active{background:var(--surface-3);}
   .btn-danger{background:rgba(232,97,93,0.12); color:var(--danger); border:1px solid rgba(232,97,93,0.3);}
-  .btn-sm{min-height:38px; padding:8px 14px; font-size:13px; width:auto;}
+  .btn-sm{
+    min-height:38px; padding:8px 14px; font-size:13px; width:auto;
+    border-radius:var(--radius-sm); font-family:var(--font-body); font-weight:600; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  }
   .empty-state{
     text-align:center; padding:48px 20px; color:var(--text-faint);
   }
