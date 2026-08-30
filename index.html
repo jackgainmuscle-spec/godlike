@@ -257,9 +257,15 @@
     border:1px solid var(--accent); border-radius:var(--radius); padding:14px 16px;
     display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;
   }
-  .active-workout-bar .aw-eyebrow{font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.8px; font-weight:700;}
+  .active-workout-bar .aw-eyebrow{font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.8px; font-weight:700; display:flex; align-items:center; gap:5px;}
+  .active-workout-bar .aw-eyebrow.right{justify-content:flex-end;}
   .active-workout-bar .aw-time{font-family:var(--font-mono); color:var(--accent); font-size:20px; font-weight:600; font-variant-numeric:tabular-nums;}
   .active-workout-bar .aw-vol{font-family:var(--font-display); color:var(--accent); font-size:18px; text-align:right;}
+  .aw-live-dot{width:7px; height:7px; border-radius:50%; background:var(--accent); flex-shrink:0; animation:awPulse 1.4s ease-out infinite;}
+  @keyframes awPulse{
+    0%{box-shadow:0 0 0 0 rgba(255,42,59,0.55);}
+    100%{box-shadow:0 0 0 8px rgba(255,42,59,0);}
+  }
 
   .rest-control{display:flex; align-items:center; gap:6px; margin-top:6px;}
   .rest-control .rest-value{font-size:11px; color:var(--text-dim); min-width:58px; text-align:center; font-weight:600;}
@@ -347,7 +353,8 @@
   .rt-controls{display:flex; gap:14px; margin-top:36px;}
   .rt-adj{
     width:56px; height:56px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border);
-    color:var(--text); font-size:20px; font-weight:700;
+    color:var(--text); font-size:20px; font-weight:700; line-height:1; padding:0;
+    display:flex; align-items:center; justify-content:center;
   }
   .rt-skip{margin-top:28px; background:none; border:none; color:var(--text-dim); font-size:14px; text-decoration:underline;}
 
@@ -436,7 +443,7 @@
     <!-- ================= WORKOUTS TAB ================= -->
     <section class="view active" id="view-workouts" data-accent="var(--accent)">
 
-      <div id="activeWorkoutBar" style="display:none;"></div>
+      <div id="activeWorkoutBar" class="active-workout-bar" style="display:none;"></div>
 
       <div id="workoutsHome">
         <div class="unit-toggle-row">
@@ -1769,11 +1776,11 @@ async function renderWorkoutsHome(){
     bar.style.display = 'flex';
     bar.innerHTML = `
       <div>
-        <div class="aw-eyebrow">${activeWorkout.templateName || 'Active Workout'}</div>
+        <div class="aw-eyebrow"><span class="aw-live-dot"></span>${activeWorkout.templateName || 'Active Workout'}</div>
         <div class="aw-time" id="awTimer">00:00:00</div>
       </div>
       <div>
-        <div class="aw-eyebrow" style="text-align:right;">Volume</div>
+        <div class="aw-eyebrow right">Volume</div>
         <div class="aw-vol" id="awVolume">0 ${unitLabel()}</div>
       </div>`;
     startLiveTimer(activeWorkout.startedAt);
