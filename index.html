@@ -308,12 +308,19 @@
      exercise list AND the active-workout exercise cards ("add it everywhere"). ---- */
   .drag-handle{
     display:flex; align-items:center; justify-content:center; touch-action:none; cursor:grab;
-    color:var(--text-faint); padding:4px 8px 4px 0; flex-shrink:0; -webkit-tap-highlight-color:transparent;
+    color:var(--accent); padding:4px 8px 4px 0; flex-shrink:0; -webkit-tap-highlight-color:transparent;
   }
   .drag-handle:active{cursor:grabbing;}
   .drag-source{opacity:0;}
+  /* Forced (!important) rather than relying on the cascade: this clone is a raw cloneNode() of
+     whatever it's dragging, so it also carries that item's OWN classes and their background/
+     border-radius (.ex-block already has its own card styling, .picker-item doesn't) — without
+     forcing it here, one type of dragged row looked like a plain box and the other like a rounded
+     bubble, depending on which ruleset happened to win. This makes every dragged row look like the
+     same elevated card no matter what it's dragging. */
   .drag-clone{
-    border-radius:var(--radius-sm); background:var(--surface-2); box-shadow:0 10px 30px rgba(0,0,0,0.45);
+    border-radius:var(--radius-sm) !important; background:var(--surface-2) !important;
+    overflow:hidden !important; box-shadow:0 10px 30px rgba(0,0,0,0.45);
     transform:scale(1.02); opacity:0.98; padding-left:4px; padding-right:4px;
   }
 
@@ -2762,6 +2769,12 @@ function renderTemplateExList(){
 // still-in-flow and gets physically moved to the drop position as you drag over other items — so
 // the browser handles the "everything else shifts out of the way" reflow for free, no manual
 // transform math on the other rows needed.
+// move/up/cancel listen on `window`, not the container or handle — NOT setPointerCapture, which
+// is what was causing the clone to get stuck on screen: capture was set on the handle, but the
+// handle physically moves in the DOM mid-drag (it's inside the item, which gets repositioned via
+// target.before()/after() as you drag over other rows), and that DOM move was silently releasing
+// pointer capture on iOS Safari — so pointerup never reached the handler and the clone was never
+// cleaned up. Plain window listeners don't depend on any element staying put, so this can't happen.
 //   container      — the list's parent element; its direct children matching itemSelector are
 //                     the draggable rows (each needs a stable data-<dataAttr> index attribute).
 //   handleSelector — what you have to grab to start a drag (e.g. '.drag-handle').
@@ -2779,26 +2792,7 @@ function enableDragReorder(container, handleSelector, itemSelector, dataAttr, on
     return Array.from(container.querySelectorAll(':scope > ' + itemSelector));
   }
 
-  container.addEventListener('pointerdown', (e)=>{
-    const handle = e.target.closest(handleSelector);
-    if(!handle) return;
-    const item = handle.closest(itemSelector);
-    if(!item || item.parentElement !== container) return;
-    e.preventDefault();
-    const rect = item.getBoundingClientRect();
-    const clone = item.cloneNode(true);
-    clone.classList.add('drag-clone');
-    Object.assign(clone.style, {
-      position:'fixed', left:rect.left+'px', top:rect.top+'px',
-      width:rect.width+'px', height:rect.height+'px', margin:'0', pointerEvents:'none', zIndex:9999
-    });
-    document.body.appendChild(clone);
-    item.classList.add('drag-source'); // hidden but keeps its slot — acts as the placeholder
-    drag = { item, clone, pointerId: e.pointerId, grabOffsetY: e.clientY - rect.top };
-    handle.setPointerCapture(e.pointerId);
-  });
-
-  container.addEventListener('pointermove', (e)=>{
+  function onPointerMove(e){
     if(!drag || e.pointerId !== drag.pointerId) return;
     e.preventDefault();
     const scrollerRect = scroller.getBoundingClientRect();
@@ -2825,18 +2819,40 @@ function enableDragReorder(container, handleSelector, itemSelector, dataAttr, on
       if(after) target.after(drag.item);
       else target.before(drag.item);
     }
-  });
+  }
 
   function endDrag(e){
     if(!drag || (e && e.pointerId !== drag.pointerId)) return;
     drag.clone.remove();
     drag.item.classList.remove('drag-source');
     const newOrder = rows().map(el => +el.dataset[dataAttr]);
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', endDrag);
+    window.removeEventListener('pointercancel', endDrag);
     drag = null;
     onDrop(newOrder);
   }
-  container.addEventListener('pointerup', endDrag);
-  container.addEventListener('pointercancel', endDrag);
+
+  container.addEventListener('pointerdown', (e)=>{
+    const handle = e.target.closest(handleSelector);
+    if(!handle) return;
+    const item = handle.closest(itemSelector);
+    if(!item || item.parentElement !== container) return;
+    e.preventDefault();
+    const rect = item.getBoundingClientRect();
+    const clone = item.cloneNode(true);
+    clone.classList.add('drag-clone');
+    Object.assign(clone.style, {
+      position:'fixed', left:rect.left+'px', top:rect.top+'px',
+      width:rect.width+'px', height:rect.height+'px', margin:'0', pointerEvents:'none', zIndex:9999
+    });
+    document.body.appendChild(clone);
+    item.classList.add('drag-source'); // hidden but keeps its slot — acts as the placeholder
+    drag = { item, clone, pointerId: e.pointerId, grabOffsetY: e.clientY - rect.top };
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+  });
 }
 
 function enableTemplateExDrag(container){
