@@ -130,42 +130,42 @@
   input:focus, textarea:focus, select:focus{outline:none; border-color:var(--tab-accent, var(--accent));}
   label.field-label{font-size:12px; color:var(--text-dim); margin:0 0 6px 2px; display:block; font-weight:600; text-transform:uppercase; letter-spacing:0.4px;}
 
-  /* ============ MODAL ============ */
+  /* ============ MODAL ============
+     Every modal in the app floats as a centered, keyboard-safe dialog rather than sliding up
+     as a bottom sheet — a bottom sheet anchored to the screen's bottom edge is exactly what
+     gets hidden behind the iOS on-screen keyboard in a standalone "Add to Home Screen" app,
+     since 100vh/inset:0 don't reliably shrink when the keyboard opens there. syncModalViewport()
+     (below, near openModal) tracks the actual visible area above the keyboard via the
+     visualViewport API and keeps the backdrop/sheet sized to it, for every modal, always. */
   .modal-backdrop{
-    position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; display:flex; align-items:flex-end;
+    position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; display:flex;
+    align-items:center; justify-content:center; padding:16px;
     opacity:0; pointer-events:none; transition:opacity .2s;
   }
   .modal-backdrop.open{opacity:1; pointer-events:auto;}
   .modal-sheet{
-    background:var(--surface); width:100%; max-width:560px; margin:0 auto; border-radius:20px 20px 0 0;
-    padding:14px 18px calc(20px + var(--safe-b)); max-height:85vh; overflow-y:auto;
-    transform:translateY(100%); transition:transform .25s cubic-bezier(.2,.8,.3,1);
-    border:1px solid var(--border); border-bottom:none;
+    background:var(--surface); width:100%; max-width:560px; border-radius:20px;
+    padding:20px 18px calc(20px + var(--safe-b)); overflow-y:auto;
+    transform:scale(0.96); opacity:0; transition:opacity .2s, transform .2s;
+    border:1px solid var(--border);
   }
-  .modal-backdrop.open .modal-sheet{transform:translateY(0);}
-  .modal-handle{width:36px; height:4px; background:var(--surface-3); border-radius:2px; margin:0 auto 14px;}
+  .modal-backdrop.open .modal-sheet{transform:scale(1); opacity:1;}
   .modal-title{font-family:var(--font-display); text-transform:uppercase; font-size:17px; letter-spacing:0.5px; margin:0 0 16px;}
 
-  /* ---- Centered "picker" variant of the modal, used for the exercise pickers ----
-     Regular .modal-sheet is a bottom sheet sized to its content, which is exactly the
-     problem: with 1 search result it shrinks down near the bottom edge of the screen,
-     right where iOS parks the keyboard, and gets hidden behind it. This variant is a
-     fixed-height dialog centered in whatever space visualViewport says is actually
-     visible above the keyboard (see syncPickerViewport()), so its size and position
-     never depend on how many results are showing. */
-  .modal-backdrop.picker-modal{align-items:center; padding:16px;}
-  .modal-sheet.picker-sheet{
-    border-radius:20px; border-bottom:1px solid var(--border);
-    transform:scale(0.96); opacity:0; transition:opacity .2s, transform .2s;
-    display:flex; flex-direction:column; overflow-y:hidden; max-height:none;
+  /* ---- "Fill" variant, for the exercise pickers specifically ----
+     A plain centered .modal-sheet sizes to its content, which for these is the problem: with
+     1 search result it shrinks down to a tiny box. This variant is a genuinely fixed-height
+     dialog (see syncModalViewport) where only the list is allowed to flex/grow/shrink to fill
+     the remaining space — so its size never depends on how many results are showing. */
+  .modal-sheet.fill-sheet{
+    display:flex; flex-direction:column; overflow-y:hidden;
   }
-  .modal-backdrop.picker-modal.open .modal-sheet.picker-sheet{transform:scale(1); opacity:1;}
   /* Every direct child (title, search input, chip row, footer buttons) keeps its natural size —
      only the list is allowed to flex/shrink. Without this, when total content is slightly
      taller than the fixed sheet height, flexbox shrinks EVERY child by default (including the
      chip row), squashing the pill-shaped chips and pushing their text outside the bubble. */
-  .modal-sheet.picker-sheet > *{flex-shrink:0;}
-  .modal-sheet.picker-sheet .picker-list{flex:1 1 auto; min-height:0; max-height:none; overflow-y:auto;}
+  .modal-sheet.fill-sheet > *{flex-shrink:0;}
+  .modal-sheet.fill-sheet .picker-list{flex:1 1 auto; min-height:0; max-height:none; overflow-y:auto;}
 
   /* ============ APP DIALOG (confirm/alert replacement) ============ */
   .app-dialog-backdrop{
@@ -261,12 +261,15 @@
   .active-workout-bar .aw-time{font-family:var(--font-mono); color:var(--accent); font-size:20px; font-weight:600; font-variant-numeric:tabular-nums;}
   .active-workout-bar .aw-vol{font-family:var(--font-display); color:var(--accent); font-size:18px; text-align:right;}
 
-  .rest-control{display:flex; align-items:center; gap:6px; margin-top:2px;}
-  .rest-control .rest-value{font-size:11px; color:var(--text-dim); min-width:64px; text-align:center; font-weight:600;}
+  .rest-control{display:flex; align-items:center; gap:6px; margin-top:6px;}
+  .rest-control .rest-value{font-size:11px; color:var(--text-dim); min-width:58px; text-align:center; font-weight:600;}
   .rest-control button{
-    width:24px; height:24px; border-radius:6px; background:var(--surface-2); border:1px solid var(--border);
-    color:var(--text-dim); font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center;
+    width:22px; height:22px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border);
+    color:var(--text-dim); font-size:13px; font-weight:700; line-height:1; padding:0; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
   }
+  .rest-control button:active{background:var(--surface-3);}
+  .stepper-row{display:flex; flex-wrap:wrap; row-gap:6px; column-gap:16px;}
 
   .ex-block{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:14px; overflow:hidden;}
   .ex-block-head{display:flex; justify-content:space-between; align-items:center; padding:14px 14px 10px;}
@@ -307,10 +310,11 @@
   /* ---- Drag-to-reorder (Pointer Events; see enableDragReorder). Used for the template builder's
      exercise list AND the active-workout exercise cards ("add it everywhere"). ---- */
   .drag-handle{
+    background:none; border:none; border-radius:50%;
     display:flex; align-items:center; justify-content:center; touch-action:none; cursor:grab;
-    color:var(--accent); padding:4px 8px 4px 0; flex-shrink:0; -webkit-tap-highlight-color:transparent;
+    color:var(--accent); padding:6px; flex-shrink:0; -webkit-tap-highlight-color:transparent;
   }
-  .drag-handle:active{cursor:grabbing;}
+  .drag-handle:active{cursor:grabbing; background:var(--surface-2);}
   .drag-source{opacity:0;}
   /* Forced (!important) rather than relying on the cascade: this clone is a raw cloneNode() of
      whatever it's dragging, so it also carries that item's OWN classes and their background/
@@ -1202,39 +1206,46 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
    ========================================================================= */
 const modalBackdrop = document.getElementById('modalBackdrop');
 const modalSheet = document.getElementById('modalSheet');
-function openModal(html){
-  modalBackdrop.classList.remove('picker-modal');
-  modalSheet.classList.remove('picker-sheet');
-  modalBackdrop.style.height = ''; modalBackdrop.style.top = ''; modalSheet.style.height = '';
-  modalSheet.innerHTML = '<div class="modal-handle"></div>' + html;
-  modalBackdrop.classList.add('open');
-}
 
-// Centered, fixed-size dialog variant for the exercise pickers — see the .picker-modal/
-// .picker-sheet CSS comment for why the default bottom sheet doesn't work for these.
-// syncPickerViewport() keeps it sized/positioned to whatever's actually visible above the
-// iOS on-screen keyboard, using the visualViewport API (the layout viewport/100vh doesn't
-// reliably shrink when the keyboard opens in an "Add to Home Screen" standalone app).
-function openPickerModal(html){
-  modalBackdrop.classList.add('picker-modal');
-  modalSheet.classList.add('picker-sheet');
-  modalSheet.innerHTML = html;
-  modalBackdrop.classList.add('open');
-  syncPickerViewport();
-}
-function syncPickerViewport(){
-  if(!modalBackdrop.classList.contains('picker-modal')) return;
+// Keeps the modal sized/positioned to whatever's actually visible above the iOS on-screen
+// keyboard, using the visualViewport API (the layout viewport/100vh doesn't reliably shrink
+// when the keyboard opens in an "Add to Home Screen" standalone app). Runs for every modal,
+// not just the exercise pickers — that's the whole point: nothing should be able to slide
+// under the keyboard anymore. `.fill-sheet` (the pickers) gets a genuinely fixed height;
+// everything else just gets a max-height clamped to the visible area, so short content (e.g.
+// a couple of settings toggles) doesn't get stretched into a mostly-empty box.
+function syncModalViewport(){
   const vv = window.visualViewport;
   const availH = vv ? vv.height : window.innerHeight;
   if(vv){
     modalBackdrop.style.height = vv.height + 'px';
     modalBackdrop.style.top = vv.offsetTop + 'px';
   }
-  modalSheet.style.height = Math.max(280, Math.min(availH * 0.85, 640)) + 'px';
+  modalSheet.style.maxHeight = Math.max(240, availH - 32) + 'px';
+  if(modalSheet.classList.contains('fill-sheet')){
+    modalSheet.style.height = Math.max(280, Math.min(availH * 0.85, 640)) + 'px';
+  }else{
+    modalSheet.style.height = '';
+  }
 }
 if(window.visualViewport){
-  window.visualViewport.addEventListener('resize', syncPickerViewport);
-  window.visualViewport.addEventListener('scroll', syncPickerViewport);
+  window.visualViewport.addEventListener('resize', syncModalViewport);
+  window.visualViewport.addEventListener('scroll', syncModalViewport);
+}
+
+function openModal(html){
+  modalSheet.classList.remove('fill-sheet');
+  modalSheet.innerHTML = html;
+  modalBackdrop.classList.add('open');
+  syncModalViewport();
+}
+// "Fill" variant for the exercise pickers — see the .fill-sheet CSS comment for why a plain
+// content-sized dialog doesn't work for these (collapses to a tiny box with few results).
+function openPickerModal(html){
+  modalSheet.classList.add('fill-sheet');
+  modalSheet.innerHTML = html;
+  modalBackdrop.classList.add('open');
+  syncModalViewport();
 }
 function closeModal(){
   modalBackdrop.classList.remove('open');
@@ -2746,20 +2757,23 @@ function renderTemplateExList(){
       </button>
       <div style="min-width:0; flex:1;">
         <div class="pi-name">${ex.name}</div>
-        <div class="pi-muscle">${(ex.muscleGroups||[]).join(' · ')} · ${ex.setCount} sets</div>
-        <div class="rest-control">
-          <button data-action="tex-rest-minus" data-i="${i}" aria-label="Decrease rest">−</button>
-          <span class="rest-value">${ex.restSeconds || 90}s rest</span>
-          <button data-action="tex-rest-plus" data-i="${i}" aria-label="Increase rest">+</button>
+        <div class="pi-muscle">${(ex.muscleGroups||[]).join(' · ')}</div>
+        <div class="stepper-row">
+          <div class="rest-control">
+            <button data-action="tex-set-minus" data-i="${i}" aria-label="Decrease sets">−</button>
+            <span class="rest-value">${ex.setCount} set${ex.setCount===1 ? '' : 's'}</span>
+            <button data-action="tex-set-plus" data-i="${i}" aria-label="Increase sets">+</button>
+          </div>
+          <div class="rest-control">
+            <button data-action="tex-rest-minus" data-i="${i}" aria-label="Decrease rest">−</button>
+            <span class="rest-value">${ex.restSeconds || 90}s rest</span>
+            <button data-action="tex-rest-plus" data-i="${i}" aria-label="Increase rest">+</button>
+          </div>
         </div>
       </div>
-      <div style="display:flex; align-items:center; gap:6px;">
-        <button class="rt-adj" style="width:30px;height:30px;font-size:16px;" data-action="tex-set-minus" data-i="${i}">−</button>
-        <button class="rt-adj" style="width:30px;height:30px;font-size:16px;" data-action="tex-set-plus" data-i="${i}">+</button>
-        <button class="icon-btn" data-action="remove-tex" data-i="${i}" aria-label="Remove exercise">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
-        </button>
-      </div>
+      <button class="icon-btn" data-action="remove-tex" data-i="${i}" aria-label="Remove exercise">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+      </button>
     </div>`).join('');
 }
 
