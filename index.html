@@ -522,7 +522,7 @@
           </div>
           <div class="wt-field">
             <label class="field-label" id="wtWeightLabel">Weight (lb)</label>
-            <input type="number" id="wtWeightInput" inputmode="decimal" step="0.1" placeholder="0.0">
+            <input type="text" id="wtWeightInput" inputmode="decimal" placeholder="0.0">
           </div>
           <button class="btn btn-primary" id="wtLogBtn">Log</button>
         </div>
@@ -1383,6 +1383,30 @@ const LB_PER_KG = 2.2046226218;
 function lbsToDisplay(lbs){ return currentUnit === 'kg' ? lbs / LB_PER_KG : lbs; }
 function displayToLbs(val){ return currentUnit === 'kg' ? val * LB_PER_KG : val; }
 function unitLabel(){ return currentUnit === 'kg' ? 'kg' : 'lb'; }
+
+// iOS's number pad shows "," as the decimal key on many locales, but <input type="number">
+// only ever accepts "." per the HTML spec regardless of locale — so typing a comma into one
+// either gets silently dropped or makes the whole field register as empty. Every weight input
+// in the app is type="text" with inputmode="decimal" (keeps the same numeric keypad) instead,
+// sanitized live with this so it behaves like a real decimal field: digits only, a single "."
+// or "," as the separator, capped at `maxDecimals` digits after it. parseWeightInput() below
+// then normalizes whichever separator was typed before parsing.
+function sanitizeDecimalInput(el, maxDecimals){
+  const original = el.value;
+  let v = original.replace(/[^0-9.,]/g, '');
+  const sepIndex = v.search(/[.,]/);
+  if(sepIndex !== -1){
+    const intPart = v.slice(0, sepIndex).replace(/[.,]/g, '');
+    const sep = v[sepIndex];
+    const fracPart = v.slice(sepIndex + 1).replace(/[.,]/g, '').slice(0, maxDecimals);
+    v = intPart + sep + fracPart;
+  }
+  if(v !== original) el.value = v;
+}
+// "72,25" or "72.25" -> 72.25. Returns NaN for blank/invalid, same as parseFloat/Number would.
+function parseWeightInput(raw){
+  return raw === '' || raw == null ? NaN : parseFloat(String(raw).replace(',', '.'));
+}
 function formatWeight(v){
   const n = Math.round((v||0) * 10) / 10;
   return n.toLocaleString();
@@ -1427,7 +1451,7 @@ async function renderWeightTab(){
   const todays = wtEntriesCache.find(e=>e.date === dateInput.value);
   const weightInput = document.getElementById('wtWeightInput');
   if(document.activeElement !== weightInput){
-    weightInput.value = todays ? (Math.round(lbsToDisplay(todays.weightLbs)*10)/10) : '';
+    weightInput.value = todays ? (Math.round(lbsToDisplay(todays.weightLbs)*100)/100) : '';
   }
 
   renderWeightChart();
@@ -1437,14 +1461,15 @@ async function renderWeightTab(){
 
 document.getElementById('wtDateInput').addEventListener('change', ()=>{
   const entry = wtEntriesCache.find(e=>e.date === document.getElementById('wtDateInput').value);
-  document.getElementById('wtWeightInput').value = entry ? (Math.round(lbsToDisplay(entry.weightLbs)*10)/10) : '';
+  document.getElementById('wtWeightInput').value = entry ? (Math.round(lbsToDisplay(entry.weightLbs)*100)/100) : '';
 });
+document.getElementById('wtWeightInput').addEventListener('input', (e)=> sanitizeDecimalInput(e.target, 2));
 
 document.getElementById('wtLogBtn').addEventListener('click', async ()=>{
   const dateStr = (document.getElementById('wtDateInput').value || '').trim();
   const raw = document.getElementById('wtWeightInput').value;
   if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){ await appAlert('Enter a valid date (YYYY-MM-DD).'); return; }
-  const val = parseFloat(raw);
+  const val = parseWeightInput(raw);
   if(!raw || isNaN(val) || val <= 0){ await appAlert('Enter a valid weight.'); return; }
 
   await logWeightEntry(dateStr, displayToLbs(val));
@@ -2378,7 +2403,7 @@ function renderExerciseBlocks(){
       return `
       <tr data-ex="${exIdx}" data-set="${sIdx}">
         <td class="set-num">${sIdx+1}</td>
-        <td><input type="number" inputmode="decimal" class="weight-input" value="${dispWeight}" placeholder="0"></td>
+        <td><input type="text" inputmode="decimal" class="weight-input" value="${dispWeight}" placeholder="0"></td>
         <td><input type="number" inputmode="numeric" class="reps-input" value="${set.reps ?? ''}" placeholder="0"></td>
         <td><button class="set-check ${set.done ? 'done':''} ${isNewPR ? 'pr':''}" data-action="toggle-set">
           ${checkContent}
@@ -2475,8 +2500,10 @@ document.getElementById('exerciseBlocks').addEventListener('input', (e)=>{
   const exIdx = +row.dataset.ex, sIdx = +row.dataset.set;
   const set = activeWorkout.exercises[exIdx].sets[sIdx];
   if(e.target.classList.contains('weight-input')){
+    sanitizeDecimalInput(e.target, 2);
     const raw = e.target.value;
-    set.weight = raw === '' ? '' : String(displayToLbs(Number(raw)));
+    const parsed = parseWeightInput(raw);
+    set.weight = (raw === '' || isNaN(parsed)) ? '' : String(displayToLbs(parsed));
   }
   if(e.target.classList.contains('reps-input')) set.reps = e.target.value;
   clearTimeout(inputDebounce);
