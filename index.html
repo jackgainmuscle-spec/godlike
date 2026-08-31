@@ -1408,7 +1408,7 @@ function parseWeightInput(raw){
   return raw === '' || raw == null ? NaN : parseFloat(String(raw).replace(',', '.'));
 }
 function formatWeight(v){
-  const n = Math.round((v||0) * 10) / 10;
+  const n = Math.round((v||0) * 100) / 100;
   return n.toLocaleString();
 }
 
