@@ -419,6 +419,3369 @@
   }
   .wt-avg-btn.active{background:var(--surface-3); color:var(--accent-2); border-color:var(--accent-2);}
 
+  .wt-view-toggle{display:flex; gap:8px; margin-top:18px;}
+  .wt-view-btn{
+    flex:1; padding:8px 6px; border-radius:20px; background:var(--surface-2); border:1px solid var(--border);
+    font-size:12px; color:var(--text-dim); font-weight:600;
+  }
+  .wt-view-btn.active{background:var(--accent-2); color:#fff; border-color:var(--accent-2);}
+
+  .wt-breakdown-wrap{margin-top:12px;}
+  .wt-breakdown-empty{padding:20px 10px; text-align:center; color:var(--text-faint); font-size:13px;}
+  .wt-week-row{
+    display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:8px;
+  }
+  .wt-week-label{font-size:12px; color:var(--text-dim); flex:1;}
+  .wt-week-avg{font-family:var(--font-display); font-size:15px; color:var(--accent-2); margin-right:8px; white-space:nowrap;}
+  .wt-week-delta{font-size:11px; font-weight:600; white-space:nowrap;}
+
+  .wt-compare-wrap{margin-top:12px;}
+  .wt-compare-presets{display:flex; gap:8px; margin-bottom:14px;}
+  .wt-preset-btn{
+    flex:1; padding:8px 6px; border-radius:20px; background:var(--surface-2); border:1px solid var(--border);
+    font-size:11px; color:var(--text-dim); font-weight:600;
+  }
+  .wt-compare-period{margin-bottom:12px;}
+  .wt-compare-lbl{font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;}
+  .wt-compare-result{margin-top:4px;}
+  .wt-compare-hint{padding:14px; text-align:center; color:var(--text-faint); font-size:12px;}
+  .wt-compare-stats{display:flex; gap:10px; margin-bottom:10px;}
+  .wt-compare-delta{
+    text-align:center; font-size:13px; font-weight:700; padding:10px;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  }
+
+  .wt-log-list{max-height:340px; overflow-y:auto;}
+  .wt-log-item{
+    display:flex; justify-content:space-between; align-items:center; padding:12px 4px;
+    border-bottom:1px solid var(--border);
+  }
+  .wt-log-item:last-child{border-bottom:none;}
+  .wt-log-item .h-date{font-weight:600; font-size:14px;}
+  .wt-log-item .wt-log-val{font-family:var(--font-display); color:var(--accent-2); font-size:16px;}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+  <header class="top">
+    <h1>GOD<span>LIKE</span></h1>
+    <div class="header-right">
+      <button class="icon-btn" id="settingsBtn" aria-label="Settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="mainView">
+
+    <!-- ================= WORKOUTS TAB ================= -->
+    <section class="view active" id="view-workouts" data-accent="var(--accent)">
+
+      <div id="activeWorkoutBar" class="active-workout-bar" style="display:none;"></div>
+
+      <div id="workoutsHome">
+        <div class="unit-toggle-row">
+          <button class="unit-toggle" id="unitToggleBtn">LB</button>
+        </div>
+
+        <div class="card" id="heatmapCard" style="padding:14px 8px 12px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin:0 4px 10px;">
+            <div class="section-title" style="margin:0;">Muscle Recovery</div>
+            <button class="btn-sm btn-ghost" id="resetAllMusclesBtn" style="padding:5px 10px; font-size:11px; min-height:auto;">Reset All</button>
+          </div>
+          <div class="heatmap-row" id="heatmapRow"><!-- combined front/back anatomy SVG injected below --></div>
+          <div class="heatmap-legend">
+            <span><i class="dot dim"></i>Ready</span>
+            <span><i class="dot half"></i>Hit Once</span>
+            <span><i class="dot full"></i>Hit Twice</span>
+          </div>
+          <div class="heatmap-detail" id="heatmapDetail">Tap a muscle to see recovery status</div>
+        </div>
+
+        <div class="week-row" id="weekRow"></div>
+
+        <div class="stat-row">
+          <div class="stat-box"><div class="num" id="statWeekCount">0</div><div class="lbl">This Week</div></div>
+          <div class="stat-box"><div class="num" id="statTotal">0</div><div class="lbl">Total Logged</div></div>
+        </div>
+
+        <button class="btn btn-primary" id="startWorkoutBtn" style="margin-top:14px;">+ Start Workout</button>
+
+        <div class="section-title">Templates</div>
+        <div class="card" id="templatesCard" style="padding:4px 12px;">
+          <div class="empty-state" id="templatesEmpty">
+            <svg viewBox="0 0 24 24"><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
+            <p>No templates yet</p>
+            <div class="hint">Save a workout structure so you don't rebuild it every time</div>
+          </div>
+          <div id="templatesList"></div>
+        </div>
+        <button class="btn btn-ghost" id="newTemplateBtn" style="margin-bottom:4px;">+ New Template</button>
+
+        <div class="section-title">History</div>
+        <div class="card" id="historyCard" style="padding:4px 12px;">
+          <div class="empty-state" id="historyEmpty">
+            <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/><circle cx="12" cy="12" r="10"/></svg>
+            <p>No workouts logged yet</p>
+            <div class="hint">Tap "Start Workout" to log your first session</div>
+          </div>
+          <div id="historyList"></div>
+        </div>
+      </div>
+
+      <!-- Active workout session view -->
+      <div id="activeWorkoutSession" style="display:none;">
+        <div id="exerciseBlocks"></div>
+        <button class="btn btn-ghost" id="addExerciseBtn" style="margin-bottom:10px;">+ Add Exercise</button>
+        <button class="btn btn-primary" id="finishWorkoutBtn">Finish Workout</button>
+        <button class="btn btn-danger" id="cancelWorkoutBtn" style="margin-top:10px;">Cancel Workout</button>
+      </div>
+
+    </section>
+
+    <!-- ================= WEIGHT TAB ================= -->
+    <section class="view" id="view-weight" data-accent="var(--accent-2)">
+
+      <div class="card" id="weightTrackerCard">
+        <div class="section-title" style="margin-top:0;">Body Weight</div>
+
+        <div class="wt-log-row">
+          <div class="wt-field">
+            <label class="field-label">Date</label>
+            <input type="text" id="wtDateInput" placeholder="YYYY-MM-DD">
+          </div>
+          <div class="wt-field">
+            <label class="field-label" id="wtWeightLabel">Weight (lb)</label>
+            <input type="text" id="wtWeightInput" inputmode="decimal" placeholder="0.0">
+          </div>
+          <button class="btn btn-primary" id="wtLogBtn">Log</button>
+        </div>
+        <div class="wt-saved-hint" id="wtSavedHint">Saved</div>
+
+        <div class="wt-range-row" id="wtRangeRow">
+          <button class="wt-range-btn active" data-range="1m">1 Month</button>
+          <button class="wt-range-btn" data-range="3m">3 Months</button>
+          <button class="wt-range-btn" data-range="custom">Custom</button>
+        </div>
+        <div class="wt-custom-row" id="wtCustomRow" style="display:none;">
+          <input type="text" id="wtCustomFrom" placeholder="From YYYY-MM-DD">
+          <input type="text" id="wtCustomTo" placeholder="To YYYY-MM-DD">
+        </div>
+
+        <div class="wt-chart-wrap" id="wtChartWrap">
+          <!-- chart SVG injected by renderWeightChart() -->
+        </div>
+
+        <div class="wt-stat-row" id="wtStatRow" style="display:none;">
+          <div class="stat-box">
+            <div class="num" id="wtStatCurrent">--</div>
+            <div class="lbl">Current</div>
+          </div>
+          <div class="stat-box">
+            <div class="num" id="wtStatChange">--</div>
+            <div class="lbl">Change</div>
+          </div>
+          <div class="stat-box" id="wtAvgStatBox">
+            <div class="num" id="wtStatAvg">--</div>
+            <div class="lbl">Avg</div>
+            <div class="wt-avg-delta" id="wtStatAvgDelta"></div>
+          </div>
+        </div>
+
+        <div class="wt-avg-row" id="wtAvgRow">
+          <button class="wt-avg-btn" data-window="7">7-Day</button>
+          <button class="wt-avg-btn active" data-window="30">30-Day</button>
+          <button class="wt-avg-btn" data-window="60">60-Day</button>
+          <button class="wt-avg-btn" data-window="365">Yearly</button>
+          <button class="wt-avg-btn" data-window="all">All-Time</button>
+        </div>
+
+        <div class="wt-view-toggle" id="wtViewToggle">
+          <button class="wt-view-btn active" data-view="breakdown">Weekly Breakdown</button>
+          <button class="wt-view-btn" data-view="compare">Compare Periods</button>
+        </div>
+
+        <div class="wt-breakdown-wrap" id="wtBreakdownWrap"></div>
+
+        <div class="wt-compare-wrap" id="wtCompareWrap" style="display:none;">
+          <div class="wt-compare-presets" id="wtComparePresets">
+            <button class="wt-preset-btn" data-preset="week">This Wk vs Last Wk</button>
+            <button class="wt-preset-btn" data-preset="month">This Mo vs Last Mo</button>
+          </div>
+          <div class="wt-compare-period">
+            <div class="wt-compare-lbl">Period A</div>
+            <div class="wt-custom-row" style="margin-bottom:0;">
+              <input type="text" id="wtCmpAFrom" placeholder="From YYYY-MM-DD">
+              <input type="text" id="wtCmpATo" placeholder="To YYYY-MM-DD">
+            </div>
+          </div>
+          <div class="wt-compare-period">
+            <div class="wt-compare-lbl">Period B</div>
+            <div class="wt-custom-row" style="margin-bottom:0;">
+              <input type="text" id="wtCmpBFrom" placeholder="From YYYY-MM-DD">
+              <input type="text" id="wtCmpBTo" placeholder="To YYYY-MM-DD">
+            </div>
+          </div>
+          <div class="wt-compare-result" id="wtCompareResult"></div>
+        </div>
+      </div>
+
+      <div class="card" id="weightLogCard">
+        <div class="section-title" style="margin-top:0;">Log History</div>
+        <div class="wt-log-list" id="wtLogList"><!-- injected by renderWeightLogList() --></div>
+      </div>
+
+    </section>
+
+    <!-- ================= NUTRITION TAB (stub) ================= -->
+    <section class="view" id="view-nutrition" data-accent="var(--accent-5)">
+      <div class="stub-tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#E8A23D" stroke-width="1.4"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        <h2>Nutrition</h2>
+        <p>Open Food Facts search and macro logging land here next. Bodyweight tracking has moved to its own Weight tab.</p>
+      </div>
+    </section>
+
+    <!-- ================= ROUTINES TAB (stub) ================= -->
+    <section class="view" id="view-routines">
+      <div class="stub-tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#6DBE8A" stroke-width="1.4"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <h2>Routines</h2>
+        <p>Daily recurring checklists and scheduled Notification API reminders land here next.</p>
+      </div>
+    </section>
+
+    <!-- ================= NOTES TAB (stub) ================= -->
+    <section class="view" id="view-notes">
+      <div class="stub-tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#B187E8" stroke-width="1.4"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <h2>Journal &amp; Notes</h2>
+        <p>Markdown notes, tag filtering, and the date-linked diary land here next.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" data-tab="workouts">
+      <svg viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M4 9l3-3 3 3M20 15l-3 3-3-3M2 12l2-2M20 12l2 2M9 4l3-3 3 3M9 20l3 3 3-3"/><rect x="3" y="10" width="4" height="4" rx="1"/><rect x="17" y="10" width="4" height="4" rx="1"/></svg>
+      Workouts
+    </button>
+    <button class="tab-btn" data-tab="weight">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9l1.5 1.5M15 9l-1.5 1.5M12 12l3 3"/><path d="M12 6v2M12 16v2M6 12h2M16 12h2"/></svg>
+      Weight
+    </button>
+    <button class="tab-btn" data-tab="nutrition">
+      <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/></svg>
+      Nutrition
+    </button>
+    <button class="tab-btn" data-tab="routines">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Routines
+    </button>
+    <button class="tab-btn" data-tab="notes">
+      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      Notes
+    </button>
+  </nav>
+</div>
+
+<!-- ============ REST TIMER OVERLAY ============ -->
+<div id="rest-timer-overlay">
+  <div class="rt-label">Rest</div>
+  <div class="rt-clock" id="rtClock">01:30</div>
+  <div class="rt-controls">
+    <button class="rt-adj" id="rtMinus">−15</button>
+    <button class="rt-adj" id="rtPlus">+15</button>
+  </div>
+  <button class="rt-skip" id="rtSkip">Skip rest</button>
+</div>
+
+<!-- ============ MODAL ROOT ============ -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal-sheet" id="modalSheet"></div>
+</div>
+
+<!-- ============ APP DIALOG (confirm/alert replacement) ============
+     Native window.confirm()/alert() are unreliable inside embedded/in-app browsers (e.g. many
+     "open with" file viewers on iOS don't implement the JS dialog delegate at all, so the call
+     silently returns falsy without ever showing UI). This is a self-contained overlay so it
+     works everywhere, and it stacks above modal-root instead of replacing it, so a confirm
+     triggered from inside an already-open sheet doesn't clobber that sheet's state. -->
+<div class="app-dialog-backdrop" id="appDialogBackdrop">
+  <div class="app-dialog" id="appDialogSheet"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/pouchdb@8.0.1/dist/pouchdb.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* =========================================================================
+   DATA LAYER — PouchDB (local-first)
+   ========================================================================= */
+const db = new PouchDB('lifeos');
+
+// Doc id prefixes used across the whole app (kept here so every tab agrees):
+//   exercise:<uuid>          exercise library entries (custom:true for user-created ones)
+//   template:<uuid>          saved workout templates (preset exercises, set counts, per-exercise restSeconds)
+//   workout:<isoTimestamp>   completed / active workout sessions (durationSeconds + volume saved on finish)
+//   food:<barcode|uuid>      cached Open Food Facts items (Nutrition tab)
+//   meal_log:<date>:<uuid>   logged meals (Nutrition tab)
+//   bodyweight:<YYYY-MM-DD>  body weight entries (Nutrition tab) — id is the date itself so
+//                            re-logging the same day naturally overwrites (get rev, put again)
+//                            rather than accumulating duplicate docs per day
+//   routine:<uuid>           routine definitions (Routines tab)
+//   routine_log:<date>:<routineId>  per-day completion (Routines tab, avoids conflicts — see notes)
+//   note:<uuid>              markdown notes (Notes tab)
+//   diary:<date>             one diary entry per calendar date (Notes tab)
+//   meta:settings            app settings incl. remote CouchDB URL + unit ('lbs'|'kg')
+//
+// UNIT HANDLING: set.weight is always stored as a canonical lbs number, regardless of the
+// display unit. This keeps historical data comparable even if the person flips units later —
+// conversion happens only at render time (see lbsToDisplay/displayToLbs below).
+
+function uuid(){
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c=>{
+    const r = Math.random()*16|0, v = c==='x'?r:(r&0x3|0x8);
+    return v.toString(16);
+  });
+}
+function todayStr(d){
+  d = d || new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+// Fixed weekly training cycle: Saturday 00:00 through Friday 23:59:59. Returns the most recent
+// Saturday 00:00 at/before `d`. JS getDay(): Sun=0...Fri=5, Sat=6.
+function getWeekStart(d){
+  d = d || new Date();
+  const diffDays = (d.getDay() + 1) % 7; // Sat->0, Sun->1, Mon->2 ... Fri->6
+  const start = new Date(d);
+  start.setDate(d.getDate() - diffDays);
+  start.setHours(0,0,0,0);
+  return start;
+}
+
+/* ---------- Fine-grained sub-muscle taxonomy (replaces the old 6 coarse groups) ---------- */
+// Every exercise.muscleGroups entry is an ARRAY of these 17 sub-muscle labels — compound lifts
+// target more than one (Back Squat is Quads + Glutes, not just one or the other). Each label is
+// also what the heat map's <g id="muscle-..."> groups key off of via svgIdForLabel() below.
+const MUSCLE_TAXONOMY = {
+  'Chest': ['Upper Chest','Mid Chest'],
+  'Back': ['Upper Back','Lats','Traps','Erectors'],
+  'Shoulders': ['Front Delts','Side Delts','Rear Delts'],
+  'Legs': ['Quads','Hamstrings','Glutes','Calves'],
+  'Arms/Core': ['Biceps','Triceps','Forearms (Brachioradialis)','Abs']
+};
+const ALL_SUBMUSCLES = Object.values(MUSCLE_TAXONOMY).flat();
+
+// Translates this app's canonical sub-muscle labels to the anatomy SVG's kebab-case group ids.
+// Most labels slugify cleanly (Upper Chest -> muscle-upper-chest); these four don't because the
+// SVG uses slightly different naming (Mid vs Middle, singular vs plural muscle names).
+const LABEL_TO_SVG_ID = {
+  'Mid Chest': 'muscle-middle-chest',
+  'Biceps': 'muscle-bicep',
+  'Triceps': 'muscle-tricep',
+  'Forearms (Brachioradialis)': 'muscle-brachioradialis',
+};
+function svgIdForLabel(label){
+  if(LABEL_TO_SVG_ID[label]) return LABEL_TO_SVG_ID[label];
+  return 'muscle-' + label.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+}
+const SVG_ID_TO_LABEL = {};
+ALL_SUBMUSCLES.forEach(label => { SVG_ID_TO_LABEL[svgIdForLabel(label)] = label; });
+function labelForSvgId(id){ return SVG_ID_TO_LABEL[id] || id; }
+
+/* ---------- Exercise library seed (first run only) ---------- */
+// Each exercise now targets an ARRAY of exact SVG sub-muscles rather than one — compound lifts
+// genuinely train multiple regions (a Back Squat is Quads AND Glutes, not just one or the
+// other), and collapsing that to a single value was actively wrong, not just imprecise. Every
+// value here must be one of the 17 labels in MUSCLE_TAXONOMY — no generic "Legs"/"Core"/"Chest"
+// category is ever a valid target, only the specific sub-muscles those categories group.
+const SEED_EXERCISES = [
+  ['Barbell Bench Press', ['Mid Chest','Triceps','Front Delts']],
+  ['Incline DB Press',    ['Upper Chest','Front Delts','Triceps']],
+  ['Push-Up',             ['Mid Chest','Triceps','Front Delts']],
+  ['Cable Fly',           ['Mid Chest']],
+  ['Deadlift',            ['Erectors','Glutes','Hamstrings','Traps']],
+  ['Pull-Up',             ['Lats','Biceps','Upper Back']],
+  ['Barbell Row',         ['Upper Back','Lats','Biceps']],
+  ['Lat Pulldown',        ['Lats','Biceps']],
+  ['Seated Cable Row',    ['Upper Back','Lats','Biceps']],
+  ['Barbell Shrug',       ['Traps']],
+  ['Back Squat',          ['Quads','Glutes']],
+  ['Front Squat',         ['Quads','Glutes']],
+  ['Romanian Deadlift',   ['Hamstrings','Glutes','Erectors']],
+  ['Leg Press',           ['Quads','Glutes']],
+  ['Walking Lunge',       ['Quads','Glutes']],
+  ['Leg Curl',            ['Hamstrings']],
+  ['Calf Raise',          ['Calves']],
+  ['Hip Thrust',          ['Glutes','Hamstrings']],
+  ['Overhead Press',      ['Front Delts','Side Delts','Triceps']],
+  ['Lateral Raise',       ['Side Delts']],
+  ['Face Pull',           ['Rear Delts','Upper Back']],
+  ['Rear Delt Fly',       ['Rear Delts']],
+  ['Barbell Curl',        ['Biceps']],
+  ['Hammer Curl',         ['Biceps','Forearms (Brachioradialis)']],
+  ['Tricep Pushdown',     ['Triceps']],
+  ['Skull Crusher',       ['Triceps']],
+  ['Dip',                 ['Triceps','Mid Chest','Front Delts']],
+  ["Farmer's Carry",      ['Forearms (Brachioradialis)','Traps']],
+  ['Plank',               ['Abs']],
+  ['Hanging Leg Raise',   ['Abs']],
+  ['Cable Crunch',        ['Abs']],
+  ['Ab Wheel Rollout',    ['Abs']],
+];
+async function seedExercisesIfNeeded(){
+  try{
+    // v3 sentinel: exercise.muscleGroup (single string) became exercise.muscleGroups (array) —
+    // another fresh seed is required so nothing is left holding the old single-value shape.
+    await db.get('meta:seeded_v3');
+  }catch(e){
+    if(e.status !== 404) throw e;
+    const docs = SEED_EXERCISES.map(([name,muscles])=>({
+      _id: 'exercise:'+uuid(), type:'exercise', name, muscleGroups: muscles, createdAt: Date.now()
+    }));
+    docs.push({_id:'meta:seeded_v3', type:'meta', seededAt: Date.now()});
+    await db.bulkDocs(docs);
+  }
+}
+
+async function getExercises(){
+  const res = await db.allDocs({
+    startkey:'exercise:', endkey:'exercise:\uffff', include_docs:true
+  });
+  return res.rows.map(r=>r.doc).sort((a,b)=>a.name.localeCompare(b.name));
+}
+
+// One-time cleanup pass: merges duplicate exercises (same name, case/whitespace-insensitive)
+// and removes orphans that somehow ended up with no muscleGroups. Runs once behind its own
+// sentinel doc, same pattern as seedExercisesIfNeeded, so it's safe to ship without needing a
+// fresh full re-seed.
+async function dedupeExercisesIfNeeded(){
+  try{ await db.get('meta:deduped_v1'); return; }
+  catch(e){ if(e.status !== 404) throw e; }
+
+  const exercises = await getExercises();
+  const seen = new Map(); // normalized name -> kept doc
+  const toRemove = [];
+  exercises.forEach(ex=>{
+    const hasMuscles = Array.isArray(ex.muscleGroups) && ex.muscleGroups.length > 0;
+    if(!hasMuscles){ toRemove.push(ex); return; } // orphan: no valid target, unusable in the app
+    const key = ex.name.trim().toLowerCase();
+    if(seen.has(key)){
+      // Duplicate name — keep whichever copy has richer muscle data, remove the other.
+      const kept = seen.get(key);
+      if(ex.muscleGroups.length > kept.muscleGroups.length){
+        toRemove.push(kept);
+        seen.set(key, ex);
+      }else{
+        toRemove.push(ex);
+      }
+    }else{
+      seen.set(key, ex);
+    }
+  });
+  if(toRemove.length){
+    await db.bulkDocs(toRemove.map(d => ({ ...d, _deleted:true })));
+  }
+  await db.put({_id:'meta:deduped_v1', type:'meta', dedupedAt:Date.now(), removed:toRemove.length});
+}
+
+async function deleteExercise(exerciseId){
+  const doc = await db.get(exerciseId);
+  await db.remove(doc);
+  // Deliberately does not touch past workout/template docs — they store exercise name and
+  // muscleGroups inline at the time they were logged/built, not a live reference, so removing
+  // a library entry can't corrupt history or existing templates.
+}
+
+// Shared by both exercise pickers (active-workout and template-builder contexts). Re-opens
+// whichever picker called it afterward rather than trying to patch the already-rendered list in
+// place — simpler and avoids the list going stale relative to the exercises array closed over
+// when the picker was first opened.
+async function handleDeleteExercise(exerciseId, reopenPickerFn){
+  if(!(await appConfirm('Delete this exercise from your library? Workouts already logged with it are unaffected.'))) return;
+  await deleteExercise(exerciseId);
+  reopenPickerFn();
+}
+
+async function getWorkoutHistory(limit){
+  const res = await db.allDocs({
+    startkey:'workout:\uffff', endkey:'workout:', include_docs:true, descending:true, limit: limit||50
+  });
+  return res.rows.map(r=>r.doc).filter(d=>d.status==='completed');
+}
+
+async function getActiveWorkout(){
+  const res = await db.allDocs({
+    startkey:'workout:', endkey:'workout:\uffff', include_docs:true
+  });
+  return res.rows.map(r=>r.doc).find(d=>d.status==='active') || null;
+}
+
+async function getTemplates(){
+  const res = await db.allDocs({
+    startkey:'template:', endkey:'template:\uffff', include_docs:true
+  });
+  return res.rows.map(r=>r.doc).sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
+}
+
+/* =========================================================================
+   PREVIOUS WEIGHT/REPS LOOKUP — derived from workout history, not a separate
+   store. See the design note above actuallyStartTemplate() for why: workout:
+   docs are already the single source of truth for what was actually lifted,
+   so "last time" is just "the most recent completed workout that matches",
+   found by scanning history (already sorted newest-first by _id). No cache
+   to invalidate, no second write path to keep in sync — if a past workout is
+   edited or deleted, the lookup result changes for free.
+   ========================================================================= */
+
+// Walks `history` (newest-first, as returned by getWorkoutHistory) for the most recent
+// completed set of `sets` logged against `exerciseId`. Pass `templateId` to restrict the
+// search to workouts started from that exact template ("last time I ran THIS template");
+// omit it (or pass null) to match the exercise in ANY workout ("last time I did THIS
+// exercise", regardless of template). A workout only counts as a match if at least one set
+// actually has a weight logged — an exercise added but never filled in doesn't count.
+function findLastPerformance(history, exerciseId, templateId){
+  for(const w of history){
+    if(templateId != null && w.templateId !== templateId) continue;
+    const ex = (w.exercises||[]).find(e=>e.exerciseId===exerciseId);
+    if(ex && (ex.sets||[]).some(s=>s.weight !== '' && s.weight != null)){
+      return { sets: ex.sets, finishedAt: w.finishedAt };
+    }
+  }
+  return null;
+}
+
+// Single pass over `history` building exerciseId -> most recent performance, for the exercise
+// pickers where we want a "Last: ..." hint next to every row without re-scanning history once
+// per exercise. First match wins per id since history is newest-first.
+function buildLastPerformedMap(history){
+  const map = new Map();
+  for(const w of history){
+    for(const ex of (w.exercises||[])){
+      if(map.has(ex.exerciseId)) continue;
+      if((ex.sets||[]).some(s=>s.weight !== '' && s.weight != null)){
+        map.set(ex.exerciseId, { sets: ex.sets, finishedAt: w.finishedAt });
+      }
+    }
+  }
+  return map;
+}
+
+// Compact "135×8, 135×8, 145×6" style summary in the currently displayed unit, skipping any
+// sets that were never filled in.
+function formatSetsSummary(sets){
+  const withWeight = (sets||[]).filter(s=>s.weight !== '' && s.weight != null);
+  if(!withWeight.length) return '';
+  return withWeight.map(s=>`${formatWeight(lbsToDisplay(Number(s.weight)))}×${s.reps || 0}`).join(', ');
+}
+
+// All-time PR (heaviest weight, not reps) per exercise, across ALL completed workout history —
+// unlike findLastPerformance()/buildLastPerformedMap() this can't stop at the first match, since
+// the record could have been set at any point, so it has to walk every doc it's given. Only sets
+// actually marked done count — a typed-in-but-unchecked weight was never actually lifted.
+// Ties don't overwrite an earlier PR (first one set stands), which only matters for finishedAt.
+function buildPRMap(history){
+  const map = new Map();
+  for(const w of history){
+    for(const ex of (w.exercises||[])){
+      for(const s of (ex.sets||[])){
+        if(!s.done || s.weight === '' || s.weight == null) continue;
+        const wt = Number(s.weight);
+        if(!wt) continue;
+        const cur = map.get(ex.exerciseId);
+        if(!cur || wt > cur.weight) map.set(ex.exerciseId, { weight: wt, finishedAt: w.finishedAt });
+      }
+    }
+  }
+  return map;
+}
+
+/* =========================================================================
+   BODY WEIGHT LOG — bodyweight:<YYYY-MM-DD> docs, canonical value in lbs
+   ========================================================================= */
+async function getWeightEntries(){
+  const res = await db.allDocs({
+    startkey:'bodyweight:', endkey:'bodyweight:\uffff', include_docs:true
+  });
+  return res.rows.map(r=>r.doc).sort((a,b)=> a.date < b.date ? -1 : 1);
+}
+async function getWeightEntry(dateStr){
+  try{ return await db.get('bodyweight:'+dateStr); }catch(e){ if(e.status===404) return null; throw e; }
+}
+// Upserts by date — logging twice on the same day overwrites the prior entry rather than
+// creating a duplicate, per the same-day-overwrite requirement.
+async function logWeightEntry(dateStr, weightLbs){
+  const existing = await getWeightEntry(dateStr);
+  const doc = existing || {_id:'bodyweight:'+dateStr, type:'bodyweight', date:dateStr, createdAt:Date.now()};
+  doc.weightLbs = weightLbs;
+  doc.updatedAt = Date.now();
+  return db.put(doc);
+}
+
+const RECOVERY_MS = 72 * 60 * 60 * 1000;
+
+/* =========================================================================
+   MUSCLE RECOVERY STATE ENGINE
+   =========================================================================
+   State is now DERIVED live from actual workout history (completed + active docs' set.completedAt
+   timestamps) rather than tracked as an independent counter — this is what makes deleting a
+   workout from History automatically reduce/remove that muscle's hits: the deleted doc simply
+   stops appearing in the next scan, nothing needs to be manually "undone."
+
+   Per muscle: { lastHitAt, sessionIds:Set<workoutId> } — lastHitAt drives the 72h countdown
+   (lazy: a muscle reads back as Ready the instant now-lastHitAt >= 72h, no expiry job needed);
+   sessionIds.size (capped at 2) drives the tier (Hit Once / Hit Twice).
+
+   MANUAL RESET OVERRIDE: each muscle also has an optional lastManualReset timestamp. Any set
+   completed at or before that timestamp is excluded from the scan — this is what lets "Reset
+   All" / an individual muscle reset stick even though the history that caused the original hit
+   is still sitting right there in PouchDB. A fresh hit logged after the reset counts normally.
+
+   PERSISTENCE: refreshMuscleStats() reads workout docs from PouchDB directly (the real source of
+   truth). The reset-override timestamps are the one piece still in localStorage — see the
+   POUCHDB BINDING POINT comment below for where that'd move if it needs to sync across devices.
+   ========================================================================= */
+const MUSCLE_RESETS_KEY = 'godlike:muscle-resets'; // { [label]: lastManualResetMs }
+
+// ---- POUCHDB BINDING POINT: reset-override persistence ----
+// Currently per-browser only. To sync manual resets across devices over local Wi-Fi, swap these
+// two for an upsert against a 'meta:muscle-resets' doc, the same way settings/units already work:
+//   async function loadMuscleResets(){ try{ return (await db.get('meta:muscle-resets')).data; }catch(e){ return {}; } }
+//   async function saveMuscleResets(r){ let doc; try{ doc=await db.get('meta:muscle-resets'); }catch(e){ doc={_id:'meta:muscle-resets'}; } doc.data=r; await db.put(doc); }
+function loadMuscleResets(){
+  try{ const raw = localStorage.getItem(MUSCLE_RESETS_KEY); return raw ? JSON.parse(raw) : {}; }
+  catch(e){ return {}; }
+}
+function saveMuscleResets(resets){
+  try{ localStorage.setItem(MUSCLE_RESETS_KEY, JSON.stringify(resets)); }catch(e){ /* degrade silently */ }
+}
+
+function resetMuscle(label){
+  const resets = loadMuscleResets();
+  resets[label] = Date.now();
+  saveMuscleResets(resets);
+}
+function resetAllMuscles(){
+  const now = Date.now();
+  const resets = {};
+  ALL_SUBMUSCLES.forEach(l => { resets[l] = now; });
+  saveMuscleResets(resets);
+}
+
+let muscleStatsCache = {}; // label -> {lastHitAt, sessionIds:Set<workoutId>} — populated by refreshMuscleStats()
+
+// Re-scans PouchDB workout history and rebuilds muscleStatsCache. Cheap (one allDocs query),
+// so it's safe to call before every overtraining check and every heat map paint rather than
+// trying to incrementally patch a cached value — that incremental-patching approach is exactly
+// what made "delete a workout" hard to keep in sync last time.
+async function refreshMuscleStats(){
+  const resets = loadMuscleResets();
+  const weekStartMs = getWeekStart().getTime();
+  const res = await db.allDocs({ startkey:'workout:', endkey:'workout:\uffff', include_docs:true });
+  const docs = res.rows.map(r=>r.doc).filter(d => d.status==='completed' || d.status==='active');
+
+  const stats = {};
+  docs.forEach(w=>{
+    (w.exercises||[]).forEach(ex=>{
+      (ex.muscleGroups||[]).forEach(label=>{
+        (ex.sets||[]).forEach(set=>{
+          if(!set.done || !set.completedAt) return;
+          const resetAt = resets[label] || 0;
+          if(set.completedAt <= resetAt) return;      // pre-dates this muscle's manual reset
+          if(set.completedAt < weekStartMs) return;    // outside the current Sat–Fri cycle
+          if(!stats[label]) stats[label] = { lastHitAt:0, sessionIds:new Set() };
+          if(set.completedAt > stats[label].lastHitAt) stats[label].lastHitAt = set.completedAt;
+          stats[label].sessionIds.add(w._id);
+        });
+      });
+    });
+  });
+  muscleStatsCache = stats;
+}
+
+// Synchronous read of the last-refreshed cache — call refreshMuscleStats() first if the data
+// might be stale (anywhere this matters, e.g. overtraining checks and heat map paint, already do).
+function getMuscleState(muscleLabel){
+  const stat = muscleStatsCache[muscleLabel];
+  if(!stat || !stat.lastHitAt) return { tier:0, label:'Ready', msRemaining:0 };
+  const elapsed = Date.now() - stat.lastHitAt;
+  if(elapsed >= RECOVERY_MS) return { tier:0, label:'Ready', msRemaining:0 };
+  const hits = stat.sessionIds.size;
+  return {
+    tier: hits >= 2 ? 2 : 1,
+    label: hits >= 2 ? 'Hit Twice' : 'Hit Once',
+    msRemaining: RECOVERY_MS - elapsed
+  };
+}
+
+function formatCountdown(ms){
+  const totalMinutes = Math.max(0, Math.ceil(ms / 60000));
+  return `${Math.floor(totalMinutes/60)}h ${totalMinutes%60}m remaining`;
+}
+
+// Builds the warning strings for a set of target muscles without side effects — used both by
+// checkAndWarnThenProceed (which then gates on them) and the template preview modal (which just
+// displays them informationally). Assumes muscleStatsCache is already fresh.
+function buildRecoveryWarnings(muscles){
+  const unique = [...new Set(muscles)].filter(Boolean);
+  const warnings = [];
+  unique.forEach(m=>{
+    const s = getMuscleState(m);
+    if(s.tier === 1 || s.tier === 2){
+      const hoursLeft = Math.ceil(s.msRemaining / 3600000);
+      warnings.push(`Warning: ${m} is still recovering (${hoursLeft} hours remaining). Proceed anyway?`);
+    }
+    if(s.tier === 2){
+      warnings.push(`Warning: ${m} has hit maximum weekly volume (2 sessions). Overtraining risk!`);
+    }
+  });
+  return warnings;
+}
+
+// Runs the fatigue + weekly-cap checks for a set of target muscles before a template is started
+// or an exercise is added to an active session. Skips straight to proceedFn() if nothing to warn
+// about; otherwise shows a modal with every triggered warning and lets the person cancel or
+// proceed anyway.
+async function checkAndWarnThenProceed(muscles, proceedFn, cancelFn){
+  await refreshMuscleStats();
+  const warnings = buildRecoveryWarnings(muscles);
+  if(warnings.length === 0){ proceedFn(); return; }
+  openModal(`
+    <div class="modal-title">Recovery Check</div>
+    <div style="margin-bottom:20px;">
+      ${warnings.map(w=>`<div class="warn-line">⚠️ ${w}</div>`).join('')}
+    </div>
+    <button class="btn btn-primary" id="warnProceedBtn">Proceed Anyway</button>
+    <button class="btn btn-ghost" id="warnCancelBtn" style="margin-top:10px;">Cancel</button>
+  `);
+  document.getElementById('warnProceedBtn').addEventListener('click', ()=>{ closeModal(); proceedFn(); });
+  document.getElementById('warnCancelBtn').addEventListener('click', ()=>{ closeModal(); if(cancelFn) cancelFn(); });
+}
+
+/* =========================================================================
+   SETTINGS
+   ========================================================================= */
+async function loadSettings(){
+  try{ return await db.get('meta:settings'); }
+  catch(e){ return {_id:'meta:settings', type:'meta', unit:'lbs'}; }
+}
+async function saveSettings(settings){
+  try{
+    const existing = await db.get('meta:settings');
+    settings._rev = existing._rev;
+  }catch(e){/* new doc, no rev yet */}
+  return db.put(settings);
+}
+
+/* =========================================================================
+   BACKUP — export/import your data as a plain JSON file, entirely on-device.
+   This replaces the earlier CouchDB/live-sync approach: no server, no network setup,
+   no other device required. Export hands a file to iOS's Share Sheet (AirDrop, Files,
+   email, etc.) so you can park a copy anywhere; Import reads that same file back in,
+   which is your recovery path if the app/its storage ever gets wiped.
+   ========================================================================= */
+async function exportAllData(){
+  const res = await db.allDocs({include_docs:true});
+  const docs = res.rows.map(r=>r.doc).filter(d=> !d._id.startsWith('_design/'));
+  const payload = {app:'GODLIKE Life OS', exportedAt:new Date().toISOString(), docs};
+  const json = JSON.stringify(payload, null, 2);
+  const filename = `lifeos-backup-${todayStr()}.json`;
+  const blob = new Blob([json], {type:'application/json'});
+  const file = new File([blob], filename, {type:'application/json'});
+
+  // Prefer the native Share Sheet on phones — one tap to AirDrop, save to Files, email, etc.
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({files:[file], title:filename});
+      return;
+    }catch(e){ /* user backed out of the share sheet — fall through to a plain download */ }
+  }
+  // Fallback for browsers without file-sharing support: a normal download link.
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function importDataFromFile(file){
+  let payload;
+  try{
+    payload = JSON.parse(await file.text());
+  }catch(e){
+    await appAlert("That file isn't valid JSON — pick a backup that was exported from this app.");
+    return;
+  }
+  const docs = Array.isArray(payload) ? payload : (payload.docs || []);
+  if(!docs.length){ await appAlert('No records found in that file.'); return; }
+
+  const ok = await appConfirm(
+    `Import ${docs.length} record(s) from this backup? Anything already on this device with a matching ID will be overwritten by the backup's version.`,
+    {confirmLabel:'Import', danger:false}
+  );
+  if(!ok) return;
+
+  let imported = 0, failed = 0;
+  for(const doc of docs){
+    const clean = {...doc};
+    delete clean._rev; // let PouchDB resolve the correct rev locally rather than trusting the file's
+    try{
+      await db.put(clean);
+      imported++;
+    }catch(e){
+      if(e.status === 409){
+        // Doc already exists locally — re-fetch its current rev and overwrite with the backup's copy.
+        try{
+          const existing = await db.get(clean._id);
+          clean._rev = existing._rev;
+          await db.put(clean);
+          imported++;
+        }catch(e2){ failed++; }
+      }else{
+        failed++;
+      }
+    }
+  }
+  await appAlert(`Import complete: ${imported} record(s) restored${failed ? `, ${failed} failed` : ''}.`);
+  await seedExercisesIfNeeded();
+  refreshCurrentTab();
+}
+
+/* =========================================================================
+   NAVIGATION
+   ========================================================================= */
+const TAB_ACCENTS = {
+  workouts:'--accent', weight:'--accent-2', nutrition:'--accent-5', routines:'--accent-3', notes:'--accent-4'
+};
+function switchTab(tab){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.documentElement.style.setProperty('--tab-accent', 'var('+TAB_ACCENTS[tab]+')');
+  window.__currentTab = tab;
+  refreshCurrentTab();
+}
+function refreshCurrentTab(){
+  if(window.__currentTab === 'workouts') renderWorkoutsHome();
+  if(window.__currentTab === 'weight') renderWeightTab();
+}
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
+});
+
+/* =========================================================================
+   MODAL HELPER
+   ========================================================================= */
+const modalBackdrop = document.getElementById('modalBackdrop');
+const modalSheet = document.getElementById('modalSheet');
+
+// Keeps the modal sized/positioned to whatever's actually visible above the iOS on-screen
+// keyboard, using the visualViewport API (the layout viewport/100vh doesn't reliably shrink
+// when the keyboard opens in an "Add to Home Screen" standalone app). Runs for every modal,
+// not just the exercise pickers — that's the whole point: nothing should be able to slide
+// under the keyboard anymore. `.fill-sheet` (the pickers) gets a genuinely fixed height;
+// everything else just gets a max-height clamped to the visible area, so short content (e.g.
+// a couple of settings toggles) doesn't get stretched into a mostly-empty box.
+function syncModalViewport(){
+  const vv = window.visualViewport;
+  const availH = vv ? vv.height : window.innerHeight;
+  if(vv){
+    modalBackdrop.style.height = vv.height + 'px';
+    modalBackdrop.style.top = vv.offsetTop + 'px';
+  }
+  modalSheet.style.maxHeight = Math.max(240, availH - 32) + 'px';
+  if(modalSheet.classList.contains('fill-sheet')){
+    modalSheet.style.height = Math.max(280, Math.min(availH * 0.85, 640)) + 'px';
+  }else{
+    modalSheet.style.height = '';
+  }
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', syncModalViewport);
+  window.visualViewport.addEventListener('scroll', syncModalViewport);
+}
+
+function openModal(html){
+  modalSheet.classList.remove('fill-sheet');
+  modalSheet.innerHTML = html;
+  modalBackdrop.classList.add('open');
+  syncModalViewport();
+}
+// "Fill" variant for the exercise pickers — see the .fill-sheet CSS comment for why a plain
+// content-sized dialog doesn't work for these (collapses to a tiny box with few results).
+function openPickerModal(html){
+  modalSheet.classList.add('fill-sheet');
+  modalSheet.innerHTML = html;
+  modalBackdrop.classList.add('open');
+  syncModalViewport();
+}
+function closeModal(){
+  modalBackdrop.classList.remove('open');
+  // Safety net for abandoning a template create/edit without saving (e.g. backing out of the
+  // "Save this workout as a template?" flow after finishing an ad hoc workout, where the
+  // underlying view is already stale — the workout was marked completed before this modal
+  // opened). saveTemplateDraft() already nulls templateDraft before calling closeModal() on a
+  // successful save, so this doesn't double-fire there.
+  if(templateDraft){
+    templateDraft = null;
+    renderWorkoutsHome();
+  }
+}
+modalBackdrop.addEventListener('click', (e)=>{ if(e.target===modalBackdrop) closeModal(); });
+
+// Stand-ins for window.confirm()/alert() — see the markup comment above #appDialogBackdrop for
+// why native dialogs can't be trusted here. Both resolve a Promise so call sites read the same
+// as `if(!confirm(...)) return;` just with an `await` in front.
+const appDialogBackdrop = document.getElementById('appDialogBackdrop');
+const appDialogSheet = document.getElementById('appDialogSheet');
+function appConfirm(message, opts={}){
+  return new Promise(resolve=>{
+    appDialogSheet.innerHTML = `
+      <div class="app-dialog-title">${opts.title || 'Are you sure?'}</div>
+      <div class="app-dialog-msg">${message}</div>
+      <div class="app-dialog-actions">
+        <button class="btn ${opts.danger===false ? 'btn-primary' : 'btn-danger'}" id="appDialogYes">${opts.confirmLabel || 'Confirm'}</button>
+        <button class="btn btn-ghost" id="appDialogNo">${opts.cancelLabel || 'Cancel'}</button>
+      </div>`;
+    appDialogBackdrop.classList.add('open');
+    const finish = (result)=>{ appDialogBackdrop.classList.remove('open'); resolve(result); };
+    document.getElementById('appDialogYes').addEventListener('click', ()=> finish(true));
+    document.getElementById('appDialogNo').addEventListener('click', ()=> finish(false));
+  });
+}
+function appAlert(message, opts={}){
+  return new Promise(resolve=>{
+    appDialogSheet.innerHTML = `
+      <div class="app-dialog-title">${opts.title || 'Heads up'}</div>
+      <div class="app-dialog-msg">${message}</div>
+      <div class="app-dialog-actions">
+        <button class="btn btn-primary" id="appDialogOk">OK</button>
+      </div>`;
+    appDialogBackdrop.classList.add('open');
+    document.getElementById('appDialogOk').addEventListener('click', ()=>{
+      appDialogBackdrop.classList.remove('open');
+      resolve();
+    });
+  });
+}
+
+/* =========================================================================
+   SETTINGS MODAL (units + export/import backup)
+   ========================================================================= */
+document.getElementById('settingsBtn').addEventListener('click', async ()=>{
+  const settings = await loadSettings();
+  openModal(`
+    <div class="modal-title">Settings</div>
+    <label class="field-label">Units</label>
+    <div class="chip-row" id="unitChipsSettings" style="margin-bottom:18px;">
+      <div class="chip ${settings.unit!=='kg' ? 'active':''}" data-u="lbs">Pounds (lb)</div>
+      <div class="chip ${settings.unit==='kg' ? 'active':''}" data-u="kg">Kilograms (kg)</div>
+    </div>
+    <label class="field-label">Backup</label>
+    <p style="font-size:12px;color:var(--text-dim);margin:6px 2px 14px;">
+      Your data lives only on this phone. Export it to a file whenever you want a backup —
+      AirDrop or save it somewhere safe. If this app or its data is ever lost, Import brings
+      it right back.
+    </p>
+    <button class="btn btn-primary" id="exportDataBtn">Export Data</button>
+    <button class="btn btn-ghost" id="importDataBtn" style="margin-top:10px;">Import Backup</button>
+    <input type="file" id="importFileInput" accept="application/json,.json" style="display:none;">
+    <button class="btn btn-primary" id="saveSettingsBtn" style="margin-top:22px;">Save</button>
+  `);
+
+  document.getElementById('unitChipsSettings').addEventListener('click', (e)=>{
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    document.querySelectorAll('#unitChipsSettings .chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+  });
+  document.getElementById('saveSettingsBtn').onclick = async ()=>{
+    const unit = document.querySelector('#unitChipsSettings .chip.active').dataset.u;
+    await saveSettings({_id:'meta:settings', type:'meta', unit});
+    currentUnit = unit;
+    closeModal();
+    renderWorkoutsHome();
+  };
+  document.getElementById('exportDataBtn').addEventListener('click', exportAllData);
+  const importInput = document.getElementById('importFileInput');
+  document.getElementById('importDataBtn').addEventListener('click', ()=> importInput.click());
+  importInput.addEventListener('change', async ()=>{
+    if(importInput.files && importInput.files[0]){
+      await importDataFromFile(importInput.files[0]);
+      importInput.value = ''; // allow re-selecting the same file later if needed
+    }
+  });
+});
+
+/* =========================================================================
+   WORKOUT TRACKER
+   ========================================================================= */
+let activeWorkout = null;      // in-memory mirror of the active workout doc
+let restTimerInterval = null;
+let restSecondsLeft = 0;
+let restTotalSeconds = 90;
+let currentUnit = 'lbs';       // 'lbs' | 'kg' — display-only; storage is always canonical lbs
+
+// exerciseId -> {weight, finishedAt} all-time PR, from completed history only. Loaded once per
+// session (see renderWorkoutsHome) rather than re-scanned on every render; renderExerciseBlocks()
+// layers in the CURRENT session's own done sets on top of this at render time, so a PR set just
+// now shows up immediately without needing to touch this map or re-query the DB mid-session.
+let prMap = new Map();
+async function refreshPRMap(){
+  // 5000 rather than the 500 used for "last performed" lookups: those stop at the first match
+  // so the window barely matters, but a PR search can't stop early — it has to see every
+  // completed workout to know the true all-time max. 5000 sessions is decades of training, so
+  // this is a ceiling in name only.
+  prMap = buildPRMap(await getWorkoutHistory(5000));
+}
+let liveTimerInterval = null;
+
+const LB_PER_KG = 2.2046226218;
+function lbsToDisplay(lbs){ return currentUnit === 'kg' ? lbs / LB_PER_KG : lbs; }
+function displayToLbs(val){ return currentUnit === 'kg' ? val * LB_PER_KG : val; }
+function unitLabel(){ return currentUnit === 'kg' ? 'kg' : 'lb'; }
+
+// iOS's number pad shows "," as the decimal key on many locales, but <input type="number">
+// only ever accepts "." per the HTML spec regardless of locale — so typing a comma into one
+// either gets silently dropped or makes the whole field register as empty. Every weight input
+// in the app is type="text" with inputmode="decimal" (keeps the same numeric keypad) instead,
+// sanitized live with this so it behaves like a real decimal field: digits only, a single "."
+// or "," as the separator, capped at `maxDecimals` digits after it. parseWeightInput() below
+// then normalizes whichever separator was typed before parsing.
+function sanitizeDecimalInput(el, maxDecimals){
+  const original = el.value;
+  let v = original.replace(/[^0-9.,]/g, '');
+  const sepIndex = v.search(/[.,]/);
+  if(sepIndex !== -1){
+    const intPart = v.slice(0, sepIndex).replace(/[.,]/g, '');
+    const sep = v[sepIndex];
+    const fracPart = v.slice(sepIndex + 1).replace(/[.,]/g, '').slice(0, maxDecimals);
+    v = intPart + sep + fracPart;
+  }
+  if(v !== original) el.value = v;
+}
+// "72,25" or "72.25" -> 72.25. Returns NaN for blank/invalid, same as parseFloat/Number would.
+function parseWeightInput(raw){
+  return raw === '' || raw == null ? NaN : parseFloat(String(raw).replace(',', '.'));
+}
+function formatWeight(v){
+  const n = Math.round((v||0) * 100) / 100;
+  return n.toLocaleString();
+}
+
+document.getElementById('unitToggleBtn').addEventListener('click', async ()=>{
+  const next = currentUnit === 'kg' ? 'lbs' : 'kg';
+  currentUnit = next;
+  const settings = await loadSettings();
+  settings.unit = next;
+  await saveSettings(settings);
+  renderWorkoutsHome();
+});
+function syncUnitToggleButton(){
+  const btn = document.getElementById('unitToggleBtn');
+  btn.textContent = currentUnit === 'kg' ? 'KG' : 'LB';
+  btn.classList.toggle('kg', currentUnit === 'kg');
+}
+
+/* =========================================================================
+   WEIGHT TAB — DAILY BODY WEIGHT TRACKER
+   ========================================================================= */
+let wtRange = '1m';                 // '1m' | '3m' | 'custom'
+let wtCustomFrom = null;             // 'YYYY-MM-DD'
+let wtCustomTo = null;               // 'YYYY-MM-DD'
+let wtAvgWindow = '30';              // '7' | '30' | '60' | '365' | 'all'
+let wtEntriesCache = [];             // all entries, ascending by date
+let wtVisiblePoints = [];            // points currently plotted (filtered + laid out for the SVG)
+let wtChartGeom = null;              // {padL,padR,padT,padB,w,h} of the last-drawn chart
+let wtScrubAnim = null;              // rAF-driven interpolation state for the scrubber
+
+function wtTodayStr(){ return todayStr(new Date()); }
+
+async function renderWeightTab(){
+  wtEntriesCache = await getWeightEntries();
+
+  // Pre-fill the log form: today's date, and today's existing entry (if any) so re-logging
+  // the same day reads back the prior value instead of looking blank.
+  const dateInput = document.getElementById('wtDateInput');
+  if(!dateInput.value) dateInput.value = wtTodayStr();
+  document.getElementById('wtWeightLabel').textContent = 'Weight ('+unitLabel()+')';
+  const todays = wtEntriesCache.find(e=>e.date === dateInput.value);
+  const weightInput = document.getElementById('wtWeightInput');
+  if(document.activeElement !== weightInput){
+    weightInput.value = todays ? (Math.round(lbsToDisplay(todays.weightLbs)*100)/100) : '';
+  }
+
+  renderWeightChart();
+  renderAvgStat();
+  renderWeightLogList();
+}
+
+document.getElementById('wtDateInput').addEventListener('change', ()=>{
+  const entry = wtEntriesCache.find(e=>e.date === document.getElementById('wtDateInput').value);
+  document.getElementById('wtWeightInput').value = entry ? (Math.round(lbsToDisplay(entry.weightLbs)*100)/100) : '';
+});
+document.getElementById('wtWeightInput').addEventListener('input', (e)=> sanitizeDecimalInput(e.target, 2));
+
+document.getElementById('wtLogBtn').addEventListener('click', async ()=>{
+  const dateStr = (document.getElementById('wtDateInput').value || '').trim();
+  const raw = document.getElementById('wtWeightInput').value;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){ await appAlert('Enter a valid date (YYYY-MM-DD).'); return; }
+  const val = parseWeightInput(raw);
+  if(!raw || isNaN(val) || val <= 0){ await appAlert('Enter a valid weight.'); return; }
+
+  await logWeightEntry(dateStr, displayToLbs(val));
+  wtEntriesCache = await getWeightEntries();
+  renderWeightChart();
+  renderAvgStat();
+  renderWeightLogList();
+
+  const hint = document.getElementById('wtSavedHint');
+  hint.textContent = 'Saved ' + dateStr;
+  hint.classList.add('show');
+  clearTimeout(wtSavedHintTimer);
+  wtSavedHintTimer = setTimeout(()=> hint.classList.remove('show'), 1800);
+});
+let wtSavedHintTimer = null;
+
+document.getElementById('wtRangeRow').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.wt-range-btn');
+  if(!btn) return;
+  wtRange = btn.dataset.range;
+  document.querySelectorAll('#wtRangeRow .wt-range-btn').forEach(b=>b.classList.toggle('active', b===btn));
+  const customRow = document.getElementById('wtCustomRow');
+  customRow.style.display = wtRange === 'custom' ? 'flex' : 'none';
+  if(wtRange === 'custom'){
+    if(!wtCustomFrom || !wtCustomTo){
+      const to = wtTodayStr();
+      const from = todayStr(new Date(Date.now() - 30*24*60*60*1000));
+      document.getElementById('wtCustomFrom').value = wtCustomFrom = from;
+      document.getElementById('wtCustomTo').value = wtCustomTo = to;
+    }
+  }
+  renderWeightChart();
+});
+document.getElementById('wtCustomFrom').addEventListener('change', (e)=>{ wtCustomFrom = e.target.value; renderWeightChart(); });
+document.getElementById('wtCustomTo').addEventListener('change', (e)=>{ wtCustomTo = e.target.value; renderWeightChart(); });
+
+// -------------------- Dynamic time-period average calculator --------------------
+document.getElementById('wtAvgRow').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.wt-avg-btn');
+  if(!btn) return;
+  wtAvgWindow = btn.dataset.window;
+  document.querySelectorAll('#wtAvgRow .wt-avg-btn').forEach(b=>b.classList.toggle('active', b===btn));
+  renderAvgStat();
+});
+const WT_AVG_LABELS = {'7':'7-Day Avg', '30':'30-Day Avg', '60':'60-Day Avg', '365':'Yearly Avg', 'all':'All-Time Avg'};
+// "vs last [period]" label shown under the avg number — kept short so it fits a narrow stat box.
+const WT_AVG_PREV_LABELS = {'7':'vs last wk', '30':'vs last 30d', '60':'vs last 60d', '365':'vs last yr'};
+function computeRangeAverage(fromStr, toStr){
+  if(!wtEntriesCache.length) return null;
+  const inRange = wtEntriesCache.filter(e=> e.date >= fromStr && e.date <= toStr);
+  if(!inRange.length) return null;
+  return inRange.reduce((sum,e)=> sum + e.weightLbs, 0) / inRange.length;
+}
+function computeWindowAverage(windowKey){
+  if(!wtEntriesCache.length) return null;
+  if(windowKey === 'all') return computeRangeAverage(wtEntriesCache[0].date, wtEntriesCache[wtEntriesCache.length-1].date);
+  const days = parseInt(windowKey, 10);
+  const from = todayStr(new Date(Date.now() - days*24*60*60*1000));
+  const to = wtTodayStr();
+  return computeRangeAverage(from, to);
+}
+// Average for the period immediately BEFORE the current window, same length — e.g. for the
+// 7-day chip this is "the 7 days before that". Without this, an "average" is just one number
+// with nothing to compare it to, which defeats the point of tracking it (adjust calories based
+// on whether the trend moved). Not defined for "all-time" — there's no prior period to compare.
+function computePrevWindowAverage(windowKey){
+  if(!wtEntriesCache.length || windowKey === 'all') return null;
+  const days = parseInt(windowKey, 10);
+  const to = todayStr(new Date(Date.now() - (days+1)*24*60*60*1000));
+  const from = todayStr(new Date(Date.now() - (2*days+1)*24*60*60*1000));
+  return computeRangeAverage(from, to);
+}
+function renderAvgStat(){
+  const el = document.getElementById('wtStatAvg');
+  const lbl = document.querySelector('#wtAvgStatBox .lbl');
+  const deltaEl = document.getElementById('wtStatAvgDelta');
+  lbl.textContent = WT_AVG_LABELS[wtAvgWindow] || 'Avg';
+  const avgLbs = computeWindowAverage(wtAvgWindow);
+  el.textContent = avgLbs == null ? '--' : formatWeight(lbsToDisplay(avgLbs)) + ' ' + unitLabel();
+
+  const prevAvgLbs = computePrevWindowAverage(wtAvgWindow);
+  if(avgLbs != null && prevAvgLbs != null){
+    const deltaLbs = avgLbs - prevAvgLbs;
+    const deltaDisp = lbsToDisplay(deltaLbs);
+    const arrow = deltaLbs > 0.005 ? '▲' : (deltaLbs < -0.005 ? '▼' : '▬');
+    const sign = deltaLbs > 0 ? '+' : '';
+    deltaEl.textContent = `${arrow} ${sign}${formatWeight(deltaDisp)} ${WT_AVG_PREV_LABELS[wtAvgWindow] || ''}`;
+    deltaEl.style.color = deltaLbs > 0.005 ? 'var(--danger)' : (deltaLbs < -0.005 ? 'var(--success)' : 'var(--text-faint)');
+  }else{
+    deltaEl.textContent = '';
+  }
+  document.getElementById('wtStatRow').style.display = wtEntriesCache.length ? 'flex' : 'none';
+}
+
+// -------------------- Weekly breakdown (auto-bucketed, matches the manual "avg of each week
+// in the month" workflow) --------------------
+// Buckets use the app's existing Sat-Fri training week (getWeekStart) so "a week" means the
+// same thing here as it does for the workout recovery reset — one consistent definition
+// instead of two competing ones.
+function computeWeeklyBreakdown(entries){
+  if(!entries.length) return [];
+  const buckets = new Map(); // weekStart 'YYYY-MM-DD' -> {sum, count}
+  for(const e of entries){
+    const wkStart = todayStr(getWeekStart(new Date(e.date+'T00:00:00')));
+    if(!buckets.has(wkStart)) buckets.set(wkStart, {sum:0, count:0});
+    const b = buckets.get(wkStart);
+    b.sum += e.weightLbs;
+    b.count += 1;
+  }
+  return Array.from(buckets.entries())
+    .map(([weekStart, b])=>({weekStart, avgLbs: b.sum/b.count, count: b.count}))
+    .sort((a,b)=> a.weekStart < b.weekStart ? -1 : 1); // ascending, oldest week first
+}
+function renderWeeklyBreakdown(filteredEntries){
+  const wrap = document.getElementById('wtBreakdownWrap');
+  if(!wrap) return;
+  const entries = filteredEntries || wtFilterEntries();
+  const weeks = computeWeeklyBreakdown(entries);
+  if(!weeks.length){
+    wrap.innerHTML = `<div class="wt-breakdown-empty">No entries in this range yet.</div>`;
+    return;
+  }
+  const rows = weeks.map((w, i)=>{
+    const prev = i > 0 ? weeks[i-1] : null;
+    let deltaHtml = '';
+    if(prev){
+      const deltaLbs = w.avgLbs - prev.avgLbs;
+      const deltaDisp = lbsToDisplay(deltaLbs);
+      const arrow = deltaLbs > 0.005 ? '▲' : (deltaLbs < -0.005 ? '▼' : '▬');
+      const color = deltaLbs > 0.005 ? 'var(--danger)' : (deltaLbs < -0.005 ? 'var(--success)' : 'var(--text-faint)');
+      const sign = deltaLbs > 0 ? '+' : '';
+      deltaHtml = `<div class="wt-week-delta" style="color:${color}">${arrow} ${sign}${formatWeight(deltaDisp)}</div>`;
+    }
+    const wkStartDate = new Date(w.weekStart+'T00:00:00');
+    const wkEndDate = new Date(wkStartDate.getTime() + 6*24*60*60*1000);
+    const label = `${wtFmtDateShort(w.weekStart)} – ${wtFmtDateShort(todayStr(wkEndDate))}`;
+    return `
+      <div class="wt-week-row">
+        <div class="wt-week-label">${label}</div>
+        <div class="wt-week-avg">${formatWeight(lbsToDisplay(w.avgLbs))} ${unitLabel()}</div>
+        ${deltaHtml}
+      </div>`;
+  }).reverse().join(''); // display newest week first, delta math above already used chronological order
+  wrap.innerHTML = rows;
+}
+
+// -------------------- Compare periods (any two custom date ranges) --------------------
+document.getElementById('wtViewToggle').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.wt-view-btn');
+  if(!btn) return;
+  document.querySelectorAll('#wtViewToggle .wt-view-btn').forEach(b=>b.classList.toggle('active', b===btn));
+  const view = btn.dataset.view;
+  document.getElementById('wtBreakdownWrap').style.display = view === 'breakdown' ? 'block' : 'none';
+  document.getElementById('wtCompareWrap').style.display = view === 'compare' ? 'block' : 'none';
+});
+function wtSetCompareInputs(aFrom, aTo, bFrom, bTo){
+  document.getElementById('wtCmpAFrom').value = aFrom;
+  document.getElementById('wtCmpATo').value = aTo;
+  document.getElementById('wtCmpBFrom').value = bFrom;
+  document.getElementById('wtCmpBTo').value = bTo;
+  renderCompareResult();
+}
+document.getElementById('wtComparePresets').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.wt-preset-btn');
+  if(!btn) return;
+  const now = new Date();
+  if(btn.dataset.preset === 'week'){
+    const thisWkStart = getWeekStart(now);
+    const lastWkStart = new Date(thisWkStart.getTime() - 7*24*60*60*1000);
+    const lastWkEnd = new Date(thisWkStart.getTime() - 24*60*60*1000);
+    wtSetCompareInputs(todayStr(lastWkStart), todayStr(lastWkEnd), todayStr(thisWkStart), wtTodayStr());
+  }else if(btn.dataset.preset === 'month'){
+    const thisMoStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMoStart = new Date(now.getFullYear(), now.getMonth()-1, 1);
+    const lastMoEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+    wtSetCompareInputs(todayStr(lastMoStart), todayStr(lastMoEnd), todayStr(thisMoStart), wtTodayStr());
+  }
+});
+['wtCmpAFrom','wtCmpATo','wtCmpBFrom','wtCmpBTo'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', renderCompareResult);
+});
+function renderCompareResult(){
+  const resEl = document.getElementById('wtCompareResult');
+  if(!resEl) return;
+  const aFrom = document.getElementById('wtCmpAFrom').value.trim();
+  const aTo = document.getElementById('wtCmpATo').value.trim();
+  const bFrom = document.getElementById('wtCmpBFrom').value.trim();
+  const bTo = document.getElementById('wtCmpBTo').value.trim();
+  if(!aFrom || !aTo || !bFrom || !bTo){
+    resEl.innerHTML = `<div class="wt-compare-hint">Enter both periods (or use a preset above) to compare.</div>`;
+    return;
+  }
+  const aLo = aFrom <= aTo ? aFrom : aTo, aHi = aFrom <= aTo ? aTo : aFrom;
+  const bLo = bFrom <= bTo ? bFrom : bTo, bHi = bFrom <= bTo ? bTo : bFrom;
+  const avgA = computeRangeAverage(aLo, aHi);
+  const avgB = computeRangeAverage(bLo, bHi);
+  if(avgA == null || avgB == null){
+    resEl.innerHTML = `<div class="wt-compare-hint">${avgA==null ? 'No entries in Period A. ' : ''}${avgB==null ? 'No entries in Period B.' : ''}</div>`;
+    return;
+  }
+  const deltaLbs = avgB - avgA;
+  const deltaDisp = lbsToDisplay(deltaLbs);
+  const arrow = deltaLbs > 0.005 ? '▲' : (deltaLbs < -0.005 ? '▼' : '▬');
+  const color = deltaLbs > 0.005 ? 'var(--danger)' : (deltaLbs < -0.005 ? 'var(--success)' : 'var(--text-faint)');
+  const sign = deltaLbs > 0 ? '+' : '';
+  resEl.innerHTML = `
+    <div class="wt-compare-stats">
+      <div class="stat-box"><div class="num">${formatWeight(lbsToDisplay(avgA))} ${unitLabel()}</div><div class="lbl">Period A Avg</div></div>
+      <div class="stat-box"><div class="num">${formatWeight(lbsToDisplay(avgB))} ${unitLabel()}</div><div class="lbl">Period B Avg</div></div>
+    </div>
+    <div class="wt-compare-delta" style="color:${color}">${arrow} ${sign}${formatWeight(deltaDisp)} ${unitLabel()} (A → B)</div>
+  `;
+}
+
+function wtFilterEntries(){
+  if(!wtEntriesCache.length) return [];
+  const now = new Date();
+  if(wtRange === '1m'){
+    const from = todayStr(new Date(now.getTime() - 30*24*60*60*1000));
+    return wtEntriesCache.filter(e=> e.date >= from);
+  }
+  if(wtRange === '3m'){
+    const from = todayStr(new Date(now.getTime() - 90*24*60*60*1000));
+    return wtEntriesCache.filter(e=> e.date >= from);
+  }
+  // custom
+  if(!wtCustomFrom || !wtCustomTo) return wtEntriesCache;
+  const lo = wtCustomFrom <= wtCustomTo ? wtCustomFrom : wtCustomTo;
+  const hi = wtCustomFrom <= wtCustomTo ? wtCustomTo : wtCustomFrom;
+  return wtEntriesCache.filter(e=> e.date >= lo && e.date <= hi);
+}
+
+// Catmull-Rom -> cubic Bezier conversion so the line reads as a smooth curve through every
+// logged point (rather than a jagged polyline), without pulling in a charting library.
+function wtSmoothPath(pts){
+  if(pts.length < 2) return '';
+  if(pts.length === 2) return `M${pts[0].x},${pts[0].y} L${pts[1].x},${pts[1].y}`;
+  let d = `M${pts[0].x},${pts[0].y}`;
+  for(let i=0; i<pts.length-1; i++){
+    const p0 = pts[i===0 ? 0 : i-1];
+    const p1 = pts[i];
+    const p2 = pts[i+1];
+    const p3 = pts[i+2 < pts.length ? i+2 : i+1];
+    const c1x = p1.x + (p2.x - p0.x)/6;
+    const c1y = p1.y + (p2.y - p0.y)/6;
+    const c2x = p2.x - (p3.x - p1.x)/6;
+    const c2y = p2.y - (p3.y - p1.y)/6;
+    d += ` C${c1x},${c1y} ${c2x},${c2y} ${p2.x},${p2.y}`;
+  }
+  return d;
+}
+
+function wtFmtDateShort(dateStr){
+  const [y,m,d] = dateStr.split('-').map(Number);
+  return new Date(y, m-1, d).toLocaleDateString(undefined, {month:'short', day:'numeric'});
+}
+
+function renderWeightChart(){
+  // A fresh render tears down the old SVG, so any in-flight scrubber animation must stop
+  // before it starts referencing detached elements.
+  if(wtScrubAnim){ cancelAnimationFrame(wtScrubAnim.raf); wtScrubAnim = null; }
+
+  const wrap = document.getElementById('wtChartWrap');
+  const filtered = wtFilterEntries();
+
+  document.getElementById('wtStatCurrent').textContent = '--';
+  document.getElementById('wtStatChange').textContent = '--';
+  document.getElementById('wtStatChange').style.color = 'var(--text)';
+
+  if(filtered.length === 0){
+    wrap.innerHTML = `<div class="wt-chart-empty">No weight entries in this range yet — log today's weight above to start the trend line.</div>`;
+    wtVisiblePoints = [];
+    wtChartGeom = null;
+    renderWeeklyBreakdown([]);
+    return;
+  }
+
+  const W = 320, H = 170, padL = 34, padR = 10, padT = 14, padB = 22;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+
+  const displayVals = filtered.map(e=> lbsToDisplay(e.weightLbs));
+  let minV = Math.min(...displayVals), maxV = Math.max(...displayVals);
+  if(minV === maxV){ minV -= 1; maxV += 1; }
+  const pad = (maxV - minV) * 0.12;
+  minV -= pad; maxV += pad;
+
+  const times = filtered.map(e=> new Date(e.date+'T00:00:00').getTime());
+  const minT = times[0], maxT = times[times.length-1];
+  const tSpan = (maxT - minT) || 1;
+
+  const pts = filtered.map((e,i)=>({
+    x: padL + (times[i]-minT)/tSpan*innerW,
+    y: padT + innerH - (lbsToDisplay(e.weightLbs)-minV)/(maxV-minV)*innerH,
+    date: e.date, valueLbs: e.weightLbs
+  }));
+  // Single-point range: center it so it isn't glued to the left edge.
+  if(pts.length === 1) pts[0].x = padL + innerW/2;
+
+  wtVisiblePoints = pts;
+  wtChartGeom = {padL, padR, padT, padB, W, H, innerW, innerH};
+
+  const linePath = wtSmoothPath(pts);
+  const areaPath = pts.length >= 2
+    ? `${linePath} L${pts[pts.length-1].x},${padT+innerH} L${pts[0].x},${padT+innerH} Z`
+    : '';
+
+  wrap.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" id="wtSvg" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="wtAreaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--accent-2)" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="var(--accent-2)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+innerH}" stroke="var(--border)" stroke-width="1"/>
+      <line x1="${padL}" y1="${padT+innerH}" x2="${padL+innerW}" y2="${padT+innerH}" stroke="var(--border)" stroke-width="1"/>
+      <text class="wt-axis-label" x="4" y="${padT+4}">${formatWeight(maxV)}</text>
+      <text class="wt-axis-label" x="4" y="${padT+innerH+4}">${formatWeight(minV)}</text>
+      <text class="wt-axis-label" x="${padL}" y="${H-4}">${wtFmtDateShort(pts[0].date)}</text>
+      <text class="wt-axis-label" x="${padL+innerW}" y="${H-4}" text-anchor="end">${wtFmtDateShort(pts[pts.length-1].date)}</text>
+      ${areaPath ? `<path class="wt-area-path" d="${areaPath}"/>` : ''}
+      ${linePath ? `<path class="wt-line-path" d="${linePath}"/>` : ''}
+      ${pts.length === 1 ? `<circle cx="${pts[0].x}" cy="${pts[0].y}" r="3" fill="var(--accent-2)"/>` : ''}
+      <line class="wt-guide-line" id="wtGuideLine" x1="0" y1="${padT}" x2="0" y2="${padT+innerH}"/>
+      <circle class="wt-scrub-dot" id="wtScrubDot" r="4.5"/>
+      <rect id="wtScrubCatcher" x="0" y="0" width="${W}" height="${H}" fill="transparent"/>
+    </svg>
+    <div class="wt-tooltip" id="wtTooltip"><div class="wt-tt-date"></div><div class="wt-tt-val"></div></div>
+  `;
+
+  wireWeightScrubber();
+
+  // Summary stats for the visible range (Avg stat is handled separately by renderAvgStat()).
+  const first = displayVals[0], last = displayVals[displayVals.length-1];
+  document.getElementById('wtStatCurrent').textContent = formatWeight(last)+' '+unitLabel();
+  const change = last - first;
+  const changeEl = document.getElementById('wtStatChange');
+  changeEl.textContent = (change>0?'+':'') + formatWeight(change) + ' ' + unitLabel();
+  changeEl.style.color = change > 0 ? 'var(--danger)' : (change < 0 ? 'var(--success)' : 'var(--text)');
+
+  renderWeeklyBreakdown(filtered);
+}
+
+// Drag/hover scrubber: pointermove fires both on plain mouse hover (desktop) and while
+// dragging a touch point (mobile). Position updates are captured instantly, but the guide
+// line / dot / tooltip are driven toward that target on a rAF loop so they glide smoothly
+// between points instead of jumping — a lightweight critically-damped "spring" toward target.
+function wireWeightScrubber(){
+  const svg = document.getElementById('wtSvg');
+  const catcher = document.getElementById('wtScrubCatcher');
+  const guide = document.getElementById('wtGuideLine');
+  const dot = document.getElementById('wtScrubDot');
+  const tooltip = document.getElementById('wtTooltip');
+  if(!svg || !catcher || !wtVisiblePoints.length) return;
+
+  wtScrubAnim = {raf:null, curX:null, curY:null, targetX:null, targetY:null, active:false};
+
+  function pointFromEvent(evt){
+    const rect = svg.getBoundingClientRect();
+    const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    const xRatio = (clientX - rect.left) / rect.width;
+    return wtChartGeom.padL + xRatio * wtChartGeom.innerW;
+  }
+
+  function nearestPoint(svgX){
+    let best = wtVisiblePoints[0], bestDist = Infinity;
+    for(const p of wtVisiblePoints){
+      const d = Math.abs(p.x - svgX);
+      if(d < bestDist){ bestDist = d; best = p; }
+    }
+    return best;
+  }
+
+  function positionTooltip(x, p){
+    const leftPct = (x / wtChartGeom.W) * 100;
+    tooltip.style.left = leftPct + '%';
+    // Keep the tooltip on-screen near the edges rather than clipping outside the card.
+    tooltip.style.transform = `translateX(${leftPct < 12 ? '0%' : leftPct > 88 ? '-100%' : '-50%'})`;
+    tooltip.querySelector('.wt-tt-date').textContent = wtFmtDateShort(p.date);
+    tooltip.querySelector('.wt-tt-val').textContent = formatWeight(lbsToDisplay(p.valueLbs)) + ' ' + unitLabel();
+  }
+
+  // Each tick eases the current drawn position a fraction of the way toward the latest
+  // pointer-driven target, producing a fluid glide rather than discrete point-to-point jumps.
+  function tick(){
+    const a = wtScrubAnim;
+    if(!a || !a.active) return;
+    const ease = 0.35;
+    a.curX += (a.targetX - a.curX) * ease;
+    a.curY += (a.targetY - a.curY) * ease;
+    guide.setAttribute('x1', a.curX); guide.setAttribute('x2', a.curX);
+    dot.setAttribute('cx', a.curX); dot.setAttribute('cy', a.curY);
+    positionTooltip(a.curX, a.targetPoint);
+    const dist = Math.abs(a.targetX - a.curX) + Math.abs(a.targetY - a.curY);
+    if(dist > 0.15){
+      a.raf = requestAnimationFrame(tick);
+    }else{
+      a.curX = a.targetX; a.curY = a.targetY;
+      guide.setAttribute('x1', a.curX); guide.setAttribute('x2', a.curX);
+      dot.setAttribute('cx', a.curX); dot.setAttribute('cy', a.curY);
+      a.raf = null;
+    }
+  }
+
+  function showAt(p){
+    const a = wtScrubAnim;
+    if(!a) return;
+    if(a.curX == null){ a.curX = p.x; a.curY = p.y; }
+    a.targetX = p.x; a.targetY = p.y; a.targetPoint = p;
+    a.active = true;
+    guide.style.opacity = '1';
+    dot.style.opacity = '1';
+    dot.classList.add('pulse');
+    tooltip.classList.add('show');
+    if(!a.raf) a.raf = requestAnimationFrame(tick);
+  }
+  function hide(){
+    const a = wtScrubAnim;
+    if(a){ a.active = false; if(a.raf){ cancelAnimationFrame(a.raf); a.raf = null; } a.curX = null; }
+    guide.style.opacity = '0';
+    dot.style.opacity = '0';
+    dot.classList.remove('pulse');
+    tooltip.classList.remove('show');
+  }
+
+  function onMove(evt){
+    if(evt.cancelable) evt.preventDefault();
+    const svgX = pointFromEvent(evt);
+    showAt(nearestPoint(svgX));
+  }
+
+  catcher.addEventListener('pointermove', onMove);
+  catcher.addEventListener('pointerdown', onMove);
+  catcher.addEventListener('pointerleave', hide);
+  catcher.addEventListener('pointerup', hide);
+  catcher.addEventListener('touchmove', onMove, {passive:false});
+  catcher.addEventListener('touchend', hide);
+}
+
+// -------------------- Log history list (delete-capable) --------------------
+function renderWeightLogList(){
+  const list = document.getElementById('wtLogList');
+  if(!wtEntriesCache.length){
+    list.innerHTML = `<div class="empty-state" style="padding:24px 10px;"><p>No weight entries yet.</p><p class="hint">Log your first entry above.</p></div>`;
+    return;
+  }
+  const rows = wtEntriesCache.slice().reverse(); // newest first
+  list.innerHTML = rows.map(e => `
+    <div class="wt-log-item">
+      <div class="h-date">${wtFmtDateShort(e.date)}</div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div class="wt-log-val">${formatWeight(lbsToDisplay(e.weightLbs))} <span style="font-size:11px;color:var(--text-dim);">${unitLabel()}</span></div>
+        <button class="icon-btn" data-action="delete-weight" data-id="${e._id}" aria-label="Delete entry">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+document.getElementById('wtLogList').addEventListener('click', async (e)=>{
+  const delBtn = e.target.closest('[data-action="delete-weight"]');
+  if(!delBtn) return;
+  if(!(await appConfirm('Delete this weight entry? This cannot be undone.'))) return;
+  const doc = wtEntriesCache.find(d => d._id === delBtn.dataset.id);
+  if(!doc) return;
+  await db.remove(doc);
+  wtEntriesCache = await getWeightEntries();
+  renderWeightChart();
+  renderAvgStat();
+  renderWeightLogList();
+});
+
+async function renderWorkoutsHome(){
+  activeWorkout = await getActiveWorkout();
+  const home = document.getElementById('workoutsHome');
+  const session = document.getElementById('activeWorkoutSession');
+  const bar = document.getElementById('activeWorkoutBar');
+
+  if(activeWorkout){
+    home.style.display = 'none';
+    session.style.display = 'block';
+    bar.style.display = 'flex';
+    bar.innerHTML = `
+      <div>
+        <div class="aw-eyebrow"><span class="aw-live-dot"></span>${activeWorkout.templateName || 'Active Workout'}</div>
+        <div class="aw-time" id="awTimer">00:00:00</div>
+      </div>
+      <div>
+        <div class="aw-eyebrow right">Volume</div>
+        <div class="aw-vol" id="awVolume">0 ${unitLabel()}</div>
+      </div>`;
+    startLiveTimer(activeWorkout.startedAt);
+    updateLiveVolume();
+    await refreshPRMap();
+    renderExerciseBlocks();
+    return;
+  }
+  stopLiveTimer();
+  home.style.display = 'block';
+  session.style.display = 'none';
+  bar.style.display = 'none';
+  bar.innerHTML = '';
+
+  syncUnitToggleButton();
+
+  const history = await getWorkoutHistory(100);
+  const weekStartMs = getWeekStart().getTime();
+  document.getElementById('statWeekCount').textContent = history.filter(w=>w.finishedAt >= weekStartMs).length;
+  document.getElementById('statTotal').textContent = history.length;
+
+  await renderHeatmap();
+  renderWeekRow(history);
+
+  // ---- Templates ----
+  const templates = await getTemplates();
+  const tList = document.getElementById('templatesList');
+  const tEmpty = document.getElementById('templatesEmpty');
+  if(templates.length === 0){
+    tEmpty.style.display = 'block';
+    tList.innerHTML = '';
+  }else{
+    tEmpty.style.display = 'none';
+    tList.innerHTML = templates.map(t=>`
+      <div class="template-item">
+        <div>
+          <div class="h-date">${t.name}</div>
+          <div class="h-sub">${(t.exercises||[]).length} exercises</div>
+        </div>
+        <div class="t-actions">
+          <button class="btn btn-primary btn-sm" data-action="start-template" data-tid="${t._id}">Start</button>
+          <button class="icon-btn" data-action="template-menu" data-tid="${t._id}" aria-label="Template options">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
+          </button>
+        </div>
+      </div>`).join('');
+  }
+
+  // ---- History ----
+  const list = document.getElementById('historyList');
+  const empty = document.getElementById('historyEmpty');
+  if(history.length === 0){
+    empty.style.display = 'block';
+    list.innerHTML = '';
+  }else{
+    empty.style.display = 'none';
+    list.innerHTML = history.slice(0,20).map(w=>{
+      const volLbs = (typeof w.volume === 'number') ? w.volume : computeVolumeLbs(w.exercises, false);
+      const dateLabel = new Date(w.finishedAt).toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'});
+      const durLabel = (typeof w.durationSeconds === 'number') ? ' · ' + formatHMS(w.durationSeconds) : '';
+      return `<div class="history-item" data-wid="${w._id}" style="cursor:pointer;">        <div>
+          <div class="h-date">${dateLabel}</div>
+          <div class="h-sub">${(w.exercises||[]).length} exercises${w.templateName ? ' · '+w.templateName : ''}${durLabel}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="h-vol">${formatWeight(lbsToDisplay(volLbs))} <span style="font-size:11px;color:var(--text-dim);">${unitLabel()}</span></div>
+          <button class="icon-btn" data-action="delete-workout" data-wid="${w._id}" aria-label="Delete workout">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// Total volume in canonical lbs. onlyDone=true is used for the live counter during an active
+// session (only checked-off sets count toward volume); completed history sums every logged set.
+function computeVolumeLbs(exercises, onlyDone){
+  return (exercises||[]).reduce((sum,ex)=>
+    sum + (ex.sets||[]).filter(s=> onlyDone ? s.done : true)
+      .reduce((s2,set)=> s2 + (Number(set.weight)||0)*(Number(set.reps)||0), 0), 0);
+}
+
+function formatHMS(totalSec){
+  totalSec = Math.max(0, Math.floor(totalSec));
+  const h = Math.floor(totalSec/3600), m = Math.floor((totalSec%3600)/60), s = totalSec%60;
+  return [h,m,s].map(v=>String(v).padStart(2,'0')).join(':');
+}
+
+function startLiveTimer(startedAt){
+  clearInterval(liveTimerInterval);
+  const el = document.getElementById('awTimer');
+  function tick(){
+    if(!el) return;
+    el.textContent = formatHMS((Date.now() - startedAt) / 1000);
+  }
+  tick();
+  liveTimerInterval = setInterval(tick, 1000);
+}
+function stopLiveTimer(){
+  clearInterval(liveTimerInterval);
+  liveTimerInterval = null;
+}
+function updateLiveVolume(){
+  const el = document.getElementById('awVolume');
+  if(!el || !activeWorkout) return;
+  const volLbs = computeVolumeLbs(activeWorkout.exercises, true);
+  el.textContent = formatWeight(lbsToDisplay(volLbs)) + ' ' + unitLabel();
+}
+
+/* =========================================================================
+   MUSCLE HEAT MAP — combined front/back anatomy vector, colored by tiered recovery state
+   ========================================================================= */
+// This SVG ships pre-segmented: 17 clean <g id="muscle-..."> groups, no reverse-engineering
+// needed. Background rect, texture-pattern rect, and the <defs> pattern/image behind it have
+// already been stripped (see body_anatomy_clean.svg prep) so only the body + muscle paths
+// render — everything around the figure is transparent.
+const ANATOMY_SVG_MARKUP = `<svg width="370" height="360" viewBox="0 0 370 360" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="muscle-upper-chest">
+<path d="M78.5 84.5V87H80.5C80.9 87 84.3333 88.3333 86 89L92.5 90L97.5 88.5L102 85.5L101 82L97.5 79.5H86L84.5 80.5L82 81.5L78.5 84.5Z" fill="#504F4F"/>
+<path d="M129.5 84.5V87H127.5C127.1 87 123.667 88.3333 122 89L115.5 90L110.5 88.5L106 85.5L107 82L110.5 79.5H122L123.5 80.5L126 81.5L129.5 84.5Z" fill="#504F4F"/>
+<path d="M78.5 84.5V87H80.5C80.9 87 84.3333 88.3333 86 89L92.5 90L97.5 88.5L102 85.5L101 82L97.5 79.5H86L84.5 80.5L82 81.5L78.5 84.5Z" stroke="black"/>
+<path d="M129.5 84.5V87H127.5C127.1 87 123.667 88.3333 122 89L115.5 90L110.5 88.5L106 85.5L107 82L110.5 79.5H122L123.5 80.5L126 81.5L129.5 84.5Z" stroke="black"/>
+</g>
+<g id="muscle-middle-chest">
+<path d="M84.5 90.5L77.5 88V100.5L82.5 105.5L85.5 107.5H95L96.5 107L102 102.5L102.5 98.5V87.5L99.5 89.5L94 91.5H88.5L84.5 90.5Z" fill="#504F4F"/>
+<path d="M123 90.5L130 88V100.5L125 105.5L122 107.5H112.5L111 107L105.5 102.5L105 98.5V87.5L108 89.5L113.5 91.5H119L123 90.5Z" fill="#504F4F"/>
+<path d="M77.5 88L84.5 90.5L88.5 91.5H94L99.5 89.5L102.5 87.5V98.5L102 102.5L96.5 107L95 107.5H85.5L82.5 105.5L77.5 100.5V88ZM77.5 88V87.5M130 88L123 90.5L119 91.5H113.5L108 89.5L105 87.5V98.5L105.5 102.5L111 107L112.5 107.5H122L125 105.5L130 100.5V88ZM130 88V87.5" stroke="black"/>
+</g>
+<g id="muscle-abs">
+<path d="M100.5 106.5L89.5 112V121L91 124L102.5 117.5V107.5L100.5 106.5Z" fill="#504F4F"/>
+<path d="M90.5 126.5L102.5 120V132.5L90.5 132V126.5Z" fill="#504F4F"/>
+<path d="M94 134.5L90.5 135V143.5H102.5V134.5H94Z" fill="#504F4F"/>
+<path d="M102.5 145.5H90.5C89.7 158.7 96.1667 172.5 99.5 177.5H102.5V145.5Z" fill="#504F4F"/>
+<path d="M107 106.5L118 112V121L116.5 124L105 117.5V107.5L107 106.5Z" fill="#504F4F"/>
+<path d="M117 126.5L105 120V132.5L117 132V126.5Z" fill="#504F4F"/>
+<path d="M113.5 134.5L117 135V143.5H105V134.5H113.5Z" fill="#504F4F"/>
+<path d="M105 145.5H117C117.8 158.7 111.333 172.5 108 177.5H105V145.5Z" fill="#504F4F"/>
+<path d="M100.5 106.5L89.5 112V121L91 124L102.5 117.5V107.5L100.5 106.5Z" stroke="black"/>
+<path d="M90.5 126.5L102.5 120V132.5L90.5 132V126.5Z" stroke="black"/>
+<path d="M94 134.5L90.5 135V143.5H102.5V134.5H94Z" stroke="black"/>
+<path d="M102.5 145.5H90.5C89.7 158.7 96.1667 172.5 99.5 177.5H102.5V145.5Z" stroke="black"/>
+<path d="M107 106.5L118 112V121L116.5 124L105 117.5V107.5L107 106.5Z" stroke="black"/>
+<path d="M117 126.5L105 120V132.5L117 132V126.5Z" stroke="black"/>
+<path d="M113.5 134.5L117 135V143.5H105V134.5H113.5Z" stroke="black"/>
+<path d="M105 145.5H117C117.8 158.7 111.333 172.5 108 177.5H105V145.5Z" stroke="black"/>
+</g>
+<g id="muscle-quads">
+<path d="M75.5 175L74.5 186.5C72.9 211.7 76.5 225.333 78.5 229L85.5 234L93.5 235L98.5 211.5L100.5 190L96.5 178L84 161L80.5 160L75.5 175Z" fill="#504F4F"/>
+<path d="M132 175L133 186.5C134.6 211.7 131 225.333 129 229L122 234L114 235L109 211.5L107 190L111 178L123.5 161L127 160L132 175Z" fill="#504F4F"/>
+<path d="M75.5 175L74.5 186.5C72.9 211.7 76.5 225.333 78.5 229L85.5 234L93.5 235L98.5 211.5L100.5 190L96.5 178L84 161L80.5 160L75.5 175Z" stroke="black"/>
+<path d="M132 175L133 186.5C134.6 211.7 131 225.333 129 229L122 234L114 235L109 211.5L107 190L111 178L123.5 161L127 160L132 175Z" stroke="black"/>
+</g>
+<g id="muscle-brachioradialis">
+<path d="M67 128L56.5 124L50 136L43 168L46.5 171L51 169.5L66 137L67 128Z" fill="#504F4F"/>
+<path d="M141 128L151.5 124L158 136L165 168L161.5 171L157 169.5L142 137L141 128Z" fill="#504F4F"/>
+<path d="M67 128L56.5 124L50 136L43 168L46.5 171L51 169.5L66 137L67 128Z" stroke="black"/>
+<path d="M141 128L151.5 124L158 136L165 168L161.5 171L157 169.5L142 137L141 128Z" stroke="black"/>
+</g>
+<g id="muscle-bicep">
+<path d="M71.5 98.5C71.1 98.5 67 99.8333 65 100.5C60.6 103.3 58.8333 115.333 58.5 121C59.8333 123 63.7 126.5 68.5 124.5C73.3 122.5 73.5 110.667 73 105L75 100.5C74 99.8333 71.9 98.5 71.5 98.5Z" fill="#504F4F"/>
+<path d="M136.5 98.5C136.9 98.5 141 99.8333 143 100.5C147.4 103.3 149.167 115.333 149.5 121C148.167 123 144.3 126.5 139.5 124.5C134.7 122.5 134.5 110.667 135 105L133 100.5C134 99.8333 136.1 98.5 136.5 98.5Z" fill="#504F4F"/>
+<path d="M71.5 98.5C71.1 98.5 67 99.8333 65 100.5C60.6 103.3 58.8333 115.333 58.5 121C59.8333 123 63.7 126.5 68.5 124.5C73.3 122.5 73.5 110.667 73 105L75 100.5C74 99.8333 71.9 98.5 71.5 98.5Z" stroke="black"/>
+<path d="M136.5 98.5C136.9 98.5 141 99.8333 143 100.5C147.4 103.3 149.167 115.333 149.5 121C148.167 123 144.3 126.5 139.5 124.5C134.7 122.5 134.5 110.667 135 105L133 100.5C134 99.8333 136.1 98.5 136.5 98.5Z" stroke="black"/>
+</g>
+<g id="muscle-front-delts">
+<path d="M74.5 75.5C72.9 75.9 67.1667 89 64.5 95.5C66.1 98.7 68.8333 98.1667 70 97.5L74.5 92.5L76 83L81.5 80.5L82.5 78.5L78.5 75.5C77.8333 75.3333 76.1 75.1 74.5 75.5Z" fill="#504F4F"/>
+<path d="M134 75.5C135.6 75.9 141.333 89 144 95.5C142.4 98.7 139.667 98.1667 138.5 97.5L134 92.5L132.5 83L127 80.5L126 78.5L130 75.5C130.667 75.3333 132.4 75.1 134 75.5Z" fill="#504F4F"/>
+<path d="M74.5 75.5C72.9 75.9 67.1667 89 64.5 95.5C66.1 98.7 68.8333 98.1667 70 97.5L74.5 92.5L76 83L81.5 80.5L82.5 78.5L78.5 75.5C77.8333 75.3333 76.1 75.1 74.5 75.5Z" stroke="black"/>
+<path d="M134 75.5C135.6 75.9 141.333 89 144 95.5C142.4 98.7 139.667 98.1667 138.5 97.5L134 92.5L132.5 83L127 80.5L126 78.5L130 75.5C130.667 75.3333 132.4 75.1 134 75.5Z" stroke="black"/>
+</g>
+<g id="muscle-side-delts">
+<path d="M63.5 94C61.6667 89.5 60.6 79.7 71 76.5L63.5 94Z" fill="#504F4F"/>
+<path d="M145 94C146.833 89.5 147.4 79.7 137 76.5L145 94Z" fill="#504F4F"/>
+<path d="M63.5 94C61.6667 89.5 60.6 79.7 71 76.5L63.5 94Z" stroke="black"/>
+<path d="M145 94C146.833 89.5 147.4 79.7 137 76.5L145 94Z" stroke="black"/>
+</g>
+<g id="muscle-tricep">
+<path d="M237.5 95.5C227.1 97.1 225.167 118.5 225.5 129L232 132L240.5 110.5C241.7 108.9 239 99.8333 237.5 95.5Z" fill="#504F4F"/>
+<path d="M304 95.5C314.4 97.1 317.333 117.5 317 128L310.5 132.5L302.299 111C301.099 109.4 302.5 99.8333 304 95.5Z" fill="#504F4F"/>
+<path d="M237.5 95.5C227.1 97.1 225.167 118.5 225.5 129L232 132L240.5 110.5C241.7 108.9 239 99.8333 237.5 95.5Z" stroke="black"/>
+<path d="M304 95.5C314.4 97.1 317.333 117.5 317 128L310.5 132.5L302.299 111C301.099 109.4 302.5 99.8333 304 95.5Z" stroke="black"/>
+</g>
+<g id="muscle-rear-delts">
+<path d="M229.5 85V97.5L238.5 93V86L245.5 80V77.5H235L229.5 85Z" fill="#504F4F"/>
+<path d="M313 85V99L304 93V86L297 80V77.5H306.5L313 85Z" fill="#504F4F"/>
+<path d="M229.5 85V97.5L238.5 93V86L245.5 80V77.5H235L229.5 85Z" stroke="black"/>
+<path d="M313 85V99L304 93V86L297 80V77.5H306.5L313 85Z" stroke="black"/>
+</g>
+<g id="muscle-traps">
+<path d="M269.5 54.5H264.5C264.5 65.3 258.5 71 255.5 72.5H269.5V54.5Z" fill="#504F4F"/>
+<path d="M273 54.5H278C278 65.3 284 71 287 72.5H273V54.5Z" fill="#504F4F"/>
+<path d="M269.5 54.5H264.5C264.5 65.3 258.5 71 255.5 72.5H269.5V54.5Z" stroke="black"/>
+<path d="M273 54.5H278C278 65.3 284 71 287 72.5H273V54.5Z" stroke="black"/>
+</g>
+<g id="muscle-upper-back">
+<path d="M249.5 80.5L241.5 85.5C238.7 88.3 249 95.3333 254.5 98.5C254.667 98.6667 255.3 98.9 256.5 98.5C257.7 98.1 253.667 86.3333 251.5 80.5H249.5Z" fill="#504F4F"/>
+<path d="M254.5 100C248.1 99.2 242.5 92.6667 240.5 89.5C239.3 89.9808 239.333 94.0337 239.5 96C241.1 100.4 244.833 102.167 246.5 102.5H251.5L254.5 100Z" fill="#504F4F"/>
+<path d="M265.5 74.5H251.5C261.9 107.7 267.5 116.667 269 117L269.5 78L265.5 74.5Z" fill="#504F4F"/>
+<path d="M293 81L300 86C302.8 88.8 293.5 95.3333 288 98.5C287 98.5 286.367 98.7333 285.167 98.3333C283.967 97.9333 288.333 86.8333 290.5 81H293Z" fill="#504F4F"/>
+<path d="M287 100C293.4 99.2 300 92.6667 302 89.5C303.2 89.9808 303.167 94.0337 303 96C301.4 100.4 297.667 102.167 296 102.5H291L287 100Z" fill="#504F4F"/>
+<path d="M276.5 74.5H290.5C280.1 107.7 274 116.667 272.5 117V78L276.5 74.5Z" fill="#504F4F"/>
+<path d="M249.5 80.5L241.5 85.5C238.7 88.3 249 95.3333 254.5 98.5C254.667 98.6667 255.3 98.9 256.5 98.5C257.7 98.1 253.667 86.3333 251.5 80.5H249.5Z" stroke="black"/>
+<path d="M254.5 100C248.1 99.2 242.5 92.6667 240.5 89.5C239.3 89.9808 239.333 94.0337 239.5 96C241.1 100.4 244.833 102.167 246.5 102.5H251.5L254.5 100Z" stroke="black"/>
+<path d="M265.5 74.5H251.5C261.9 107.7 267.5 116.667 269 117L269.5 78L265.5 74.5Z" stroke="black"/>
+<path d="M293 81L300 86C302.8 88.8 293.5 95.3333 288 98.5C287 98.5 286.367 98.7333 285.167 98.3333C283.967 97.9333 288.333 86.8333 290.5 81H293Z" stroke="black"/>
+<path d="M287 100C293.4 99.2 300 92.6667 302 89.5C303.2 89.9808 303.167 94.0337 303 96C301.4 100.4 297.667 102.167 296 102.5H291L287 100Z" stroke="black"/>
+<path d="M276.5 74.5H290.5C280.1 107.7 274 116.667 272.5 117V78L276.5 74.5Z" stroke="black"/>
+</g>
+<g id="muscle-lats">
+<path d="M257.5 100.5C253.1 106.9 245 104.5 241.5 102.5C246.3 113.7 248.833 131.5 249.5 139L255.5 144.5L265.5 119.5V115.5L257.5 100.5Z" fill="#504F4F"/>
+<path d="M284.5 100.5C288.9 106.9 297 104.5 300.5 102.5C295.7 113.7 293.167 131.5 292.5 139L286.5 144.5L276.5 119.5V115.5L284.5 100.5Z" fill="#504F4F"/>
+<path d="M257.5 100.5C253.1 106.9 245 104.5 241.5 102.5C246.3 113.7 248.833 131.5 249.5 139L255.5 144.5L265.5 119.5V115.5L257.5 100.5Z" stroke="black"/>
+<path d="M284.5 100.5C288.9 106.9 297 104.5 300.5 102.5C295.7 113.7 293.167 131.5 292.5 139L286.5 144.5L276.5 119.5V115.5L284.5 100.5Z" stroke="black"/>
+</g>
+<g id="muscle-erectors">
+<path d="M256.5 146.5L266.5 121.5H268.5V158.5L256.5 150.5V146.5Z" fill="#504F4F"/>
+<path d="M285.5 146.5L275.5 121.5H273.5V158.5L285.5 150.5V146.5Z" fill="#504F4F"/>
+<path d="M256.5 146.5L266.5 121.5H268.5V158.5L256.5 150.5V146.5Z" stroke="black"/>
+<path d="M285.5 146.5L275.5 121.5H273.5V158.5L285.5 150.5V146.5Z" stroke="black"/>
+</g>
+<g id="muscle-glutes">
+<path d="M244.5 170C248.1 164.4 258.667 160 263.5 158.5C273.1 159.7 269.5 182 266.5 193C253.7 193.8 246.5 183.333 244.5 178V170Z" fill="#504F4F"/>
+<path d="M297.228 170C293.628 164.4 283.061 160 278.228 158.5C268.628 159.7 272.228 182 275.228 193C288.028 193.8 295.228 183.333 297.228 178V170Z" fill="#504F4F"/>
+<path d="M244.5 170C248.1 164.4 258.667 160 263.5 158.5C273.1 159.7 269.5 182 266.5 193C253.7 193.8 246.5 183.333 244.5 178V170Z" stroke="black"/>
+<path d="M297.228 170C293.628 164.4 283.061 160 278.228 158.5C268.628 159.7 272.228 182 275.228 193C288.028 193.8 295.228 183.333 297.228 178V170Z" stroke="black"/>
+</g>
+<g id="muscle-hamstrings">
+<path d="M267.5 195.5C257.5 196.3 246 188.5 241.5 184.5L240.5 203.5L245 228.5V246L251.5 239L259.5 246.5L261 228.5L267.5 203.5V195.5Z" fill="#504F4F"/>
+<path d="M274.5 195.5C284.5 196.3 296 188.5 300.5 184.5L301.5 203.5L297 228.5V246L290.5 239L282.5 246.5L281 228.5L274.5 203.5V195.5Z" fill="#504F4F"/>
+<path d="M267.5 195.5C257.5 196.3 246 188.5 241.5 184.5L240.5 203.5L245 228.5V246L251.5 239L259.5 246.5L261 228.5L267.5 203.5V195.5Z" stroke="black"/>
+<path d="M274.5 195.5C284.5 196.3 296 188.5 300.5 184.5L301.5 203.5L297 228.5V246L290.5 239L282.5 246.5L281 228.5L274.5 203.5V195.5Z" stroke="black"/>
+</g>
+<g id="muscle-calves">
+<path d="M251.5 243.5C247.9 244.7 244.667 252.333 243.5 256C241.1 278.8 245.167 285.833 247.5 286.5L251.5 284L254.5 286.5C263.3 277.7 261.167 262.5 259 256C258 251.333 255.1 242.3 251.5 243.5Z" fill="#504F4F"/>
+<path d="M290.912 243.5C294.512 244.7 297.746 252.333 298.912 256C301.312 278.8 297.246 285.833 294.912 286.5L290.912 284L287.912 286.5C279.112 277.7 281.246 262.5 283.412 256C284.412 251.333 287.312 242.3 290.912 243.5Z" fill="#504F4F"/>
+<path d="M251.5 243.5C247.9 244.7 244.667 252.333 243.5 256C241.1 278.8 245.167 285.833 247.5 286.5L251.5 284L254.5 286.5C263.3 277.7 261.167 262.5 259 256C258 251.333 255.1 242.3 251.5 243.5Z" stroke="black"/>
+<path d="M290.912 243.5C294.512 244.7 297.746 252.333 298.912 256C301.312 278.8 297.246 285.833 294.912 286.5L290.912 284L287.912 286.5C279.112 277.7 281.246 262.5 283.412 256C284.412 251.333 287.312 242.3 290.912 243.5Z" stroke="black"/>
+</g>
+</svg>`;
+
+let heatmapInjected = false;
+function ensureHeatmapMarkup(){
+  if(heatmapInjected) return;
+  document.getElementById('heatmapRow').innerHTML = ANATOMY_SVG_MARKUP;
+  // BUGFIX: this class is what every .muscle-group / .muscle-group.tier-1 / .muscle-group.tier-2
+  // CSS rule targets. It was previously only ever referenced in CSS and never actually applied to
+  // the injected <g> elements, so tier-1/tier-2 highlighting silently never rendered — the paths
+  // stayed on their raw inline fill="#504F4F" the whole time. Applying it once here, right after
+  // injection, is what makes every rule below actually take effect.
+  document.querySelectorAll('#heatmapRow g[id^="muscle-"]').forEach(g=>{
+    g.classList.add('muscle-group');
+  });
+  document.getElementById('heatmapRow').addEventListener('click', (e)=>{
+    const el = e.target.closest('g[id^="muscle-"]');
+    if(!el) return;
+    showMuscleDetail(labelForSvgId(el.id));
+  });
+  document.getElementById('resetAllMusclesBtn').addEventListener('click', async ()=>{
+    if(!(await appConfirm('Reset all 17 muscles back to Ready? This only affects the heat map — logged workouts stay in History.'))) return;
+    resetAllMuscles();
+    await refreshMuscleStats();
+    paintHeatmapTiers();
+    document.getElementById('heatmapDetail').textContent = 'Tap a muscle to see recovery status';
+  });
+  heatmapInjected = true;
+}
+
+// Renders the tap-to-inspect readout for one muscle, including a Reset button when it isn't
+// already Ready — wired here (rather than only in ensureHeatmapMarkup's click handler) so the
+// same readout can be re-shown after a reset without duplicating the markup.
+function showMuscleDetail(label){
+  const s = getMuscleState(label);
+  const detail = document.getElementById('heatmapDetail');
+  if(s.tier === 0){
+    detail.innerHTML = `<strong>${label}</strong> — Ready`;
+    return;
+  }
+  detail.innerHTML = `
+    <div><strong>${label}</strong> — ${s.label} · ${formatCountdown(s.msRemaining)}</div>
+    <button class="btn-sm btn-ghost" data-action="reset-one-muscle" data-label="${label}" style="margin-top:8px; padding:5px 10px; font-size:11px; min-height:auto;">Reset This Muscle</button>
+  `;
+  detail.querySelector('[data-action="reset-one-muscle"]').addEventListener('click', async ()=>{
+    resetMuscle(label);
+    await refreshMuscleStats();
+    paintHeatmapTiers();
+    showMuscleDetail(label);
+  });
+}
+
+// Just the visual pass (toggling tier-1/tier-2 classes from whatever's currently in
+// muscleStatsCache) — split out from renderHeatmap so reset actions can repaint without
+// re-running ensureHeatmapMarkup's one-time setup.
+function paintHeatmapTiers(){
+  ALL_SUBMUSCLES.forEach(label=>{
+    const el = document.getElementById(svgIdForLabel(label));
+    if(!el) return; // defensive: skip if a label has no matching region in the artwork
+    const s = getMuscleState(label);
+    el.classList.remove('tier-1','tier-2');
+    if(s.tier === 1) el.classList.add('tier-1');
+    if(s.tier === 2) el.classList.add('tier-2');
+  });
+}
+
+// Re-scans workout history (refreshMuscleStats) and repaints. This is the function to call
+// after anything that could change the picture: finishing/deleting a workout, a manual reset,
+// or the periodic timer in boot() keeping live countdowns accurate while the tab stays open.
+async function renderHeatmap(){
+  ensureHeatmapMarkup();
+  await refreshMuscleStats();
+  paintHeatmapTiers();
+}
+
+function renderWeekRow(history){
+  const container = document.getElementById('weekRow');
+  const now = new Date();
+  const weekStart = getWeekStart(now); // Saturday 00:00 — matches the training-cycle reset
+
+  const doneDates = new Set(
+    history.filter(w=>w.finishedAt).map(w=>todayStr(new Date(w.finishedAt)))
+  );
+  const labels = ['Sat','Sun','Mon','Tue','Wed','Thu','Fri'];
+  const todayKey = todayStr(now);
+
+  let html = '';
+  for(let i=0;i<7;i++){
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    const key = todayStr(d);
+    const classes = ['week-day'];
+    if(doneDates.has(key)) classes.push('done');
+    if(key === todayKey) classes.push('today');
+    html += `<div class="${classes.join(' ')}">
+      <div class="wd-label">${labels[i]}</div>
+      <div class="wd-num">${d.getDate()}</div>
+    </div>`;
+  }
+  container.innerHTML = html;
+}
+
+document.getElementById('startWorkoutBtn').addEventListener('click', async ()=>{
+  const doc = {
+    _id: 'workout:' + new Date().toISOString(),
+    type: 'workout',
+    status: 'active',
+    startedAt: Date.now(),
+    finishedAt: null,
+    exercises: []   // [{ exerciseId, name, muscleGroups:[...], restSeconds, sets:[{weight,reps,done}] }]
+  };
+  await db.put(doc);
+  renderWorkoutsHome();
+});
+
+document.getElementById('historyList').addEventListener('click', async (e)=>{
+  const delBtn = e.target.closest('[data-action="delete-workout"]');
+  if(delBtn){
+    if(!(await appConfirm('Delete this workout entry? This cannot be undone.'))) return;
+    try{
+      const doc = await db.get(delBtn.dataset.wid);
+      await db.remove(doc);
+      // No extra "recalculate the heat map" step needed: renderWorkoutsHome() below re-runs
+      // renderHeatmap() -> refreshMuscleStats(), which re-scans workout history from scratch —
+      // the just-deleted doc simply won't be there anymore, so any muscle hits it contributed
+      // are automatically reduced/removed on this next paint.
+    }catch(err){ console.warn('Delete workout failed', err); }
+    renderWorkoutsHome();
+    return;
+  }
+  const item = e.target.closest('.history-item');
+  if(item) openWorkoutSummary(item.dataset.wid);
+});
+
+// Read-only "what did I actually do that day" popup — sets/reps per exercise for one past
+// session. Intentionally just a modal, not a full screen: this is for a quick glance while
+// browsing history, not for editing (a finished workout is done, no reason to make it editable).
+async function openWorkoutSummary(workoutId){
+  const w = await db.get(workoutId);
+  const dateLabel = new Date(w.finishedAt).toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'});
+  const metaBits = [dateLabel];
+  if(typeof w.durationSeconds === 'number') metaBits.push(formatHMS(w.durationSeconds));
+  openModal(`
+    <div class="modal-title">${w.templateName || 'Workout'}</div>
+    <div style="font-size:12px; color:var(--text-dim); margin:-10px 0 16px;">${metaBits.join(' · ')}</div>
+    <div class="picker-list" style="max-height:55vh;">
+      ${(w.exercises||[]).map(ex=>{
+        const summary = formatSetsSummary(ex.sets);
+        return `
+        <div class="picker-item" style="display:block;">
+          <div class="pi-name">${ex.name}</div>
+          <div class="pi-muscle" style="margin-bottom:4px;">${(ex.muscleGroups||[]).join(' · ')}</div>
+          <div style="font-size:13px; color:var(--text-dim);">${summary ? summary + ' ' + unitLabel() : 'No sets logged'}</div>
+        </div>`;
+      }).join('') || `<div class="empty-state"><p>No exercises logged</p></div>`}
+    </div>
+    <button class="btn btn-ghost" id="summaryCloseBtn" style="margin-top:16px;">Close</button>
+  `);
+  document.getElementById('summaryCloseBtn').addEventListener('click', closeModal);
+}
+
+document.getElementById('templatesList').addEventListener('click', async (e)=>{
+  const startBtn = e.target.closest('[data-action="start-template"]');
+  const menuBtn = e.target.closest('[data-action="template-menu"]');
+  if(startBtn){
+    await startTemplateWithChecks(startBtn.dataset.tid);
+  }
+  if(menuBtn){
+    openTemplateMenu(menuBtn.dataset.tid);
+  }
+});
+
+// Compact action sheet: Check (preview) / Edit / Delete — replaces the old single trash icon
+// now that templates have more than one secondary action worth surfacing.
+function openTemplateMenu(templateId){
+  openModal(`
+    <div class="modal-title">Template Options</div>
+    <div class="picker-list" style="max-height:none; margin:0;">
+      <div class="picker-item">
+        <div class="pi-main" data-action="check-template" data-tid="${templateId}">
+          <div><div class="pi-name">Check Template</div><div class="pi-muscle" style="color:var(--text-dim); text-transform:none; letter-spacing:0;">Preview exercises &amp; recovery warnings</div></div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+      </div>
+      <div class="picker-item">
+        <div class="pi-main" data-action="edit-template" data-tid="${templateId}">
+          <div><div class="pi-name">Edit Template</div><div class="pi-muscle" style="color:var(--text-dim); text-transform:none; letter-spacing:0;">Change name, exercises, sets</div></div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1.8"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+      </div>
+      <div class="picker-item">
+        <div class="pi-main" data-action="delete-template" data-tid="${templateId}">
+          <div><div class="pi-name" style="color:var(--danger);">Delete Template</div><div class="pi-muscle" style="color:var(--text-dim); text-transform:none; letter-spacing:0;">Cannot be undone</div></div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+        </div>
+      </div>
+    </div>
+  `);
+  modalSheet.addEventListener('click', async (e)=>{
+    const row = e.target.closest('[data-action]');
+    if(!row) return;
+    const tid = row.dataset.tid;
+    if(row.dataset.action === 'check-template'){ closeModal(); openTemplatePreview(tid); }
+    if(row.dataset.action === 'edit-template'){ closeModal(); openEditTemplateModal(tid); }
+    if(row.dataset.action === 'delete-template'){
+      if(!(await appConfirm('Delete this template? Past workouts started from it are unaffected.'))) return;
+      closeModal();
+      try{ const doc = await db.get(tid); await db.remove(doc); }
+      catch(err){ console.warn('Delete template failed', err); }
+      renderWorkoutsHome();
+    }
+  });
+}
+
+// "Check" — a read-only preview of what starting this template would mean: every exercise with
+// its target muscles and set/rest plan, plus the same recovery warnings checkAndWarnThenProceed
+// would show, computed up front so the person can decide before committing to Start.
+async function openTemplatePreview(templateId){
+  const tpl = await db.get(templateId);
+  const muscles = (tpl.exercises||[]).flatMap(ex=>ex.muscleGroups||[]);
+  await refreshMuscleStats();
+  const warnings = buildRecoveryWarnings(muscles);
+  openModal(`
+    <div class="modal-title">${tpl.name}</div>
+    ${warnings.length
+      ? `<div style="margin-bottom:16px;">${warnings.map(w=>`<div class="warn-line">⚠️ ${w}</div>`).join('')}</div>`
+      : `<div style="font-size:12px; color:var(--success); margin-bottom:16px;">✓ No recovery conflicts — clear to train.</div>`}
+    <div class="picker-list" style="max-height:42vh;">
+      ${(tpl.exercises||[]).map(ex=>`
+        <div class="picker-item">
+          <div style="min-width:0;">
+            <div class="pi-name">${ex.name}</div>
+            <div class="pi-muscle">${(ex.muscleGroups||[]).join(' · ')}</div>
+          </div>
+          <div style="font-size:12px; color:var(--text-dim); flex-shrink:0; text-align:right; white-space:nowrap;">${ex.setCount||3} sets · ${ex.restSeconds||90}s rest</div>
+        </div>`).join('')}
+    </div>
+    <button class="btn btn-primary" id="previewStartBtn" style="margin-top:16px;">Start ${tpl.name}</button>
+    <button class="btn btn-ghost" id="previewCloseBtn" style="margin-top:10px;">Close</button>
+  `);
+  document.getElementById('previewStartBtn').addEventListener('click', ()=>{
+    closeModal();
+    startTemplateWithChecks(templateId);
+  });
+  document.getElementById('previewCloseBtn').addEventListener('click', closeModal);
+}
+
+async function startTemplateWithChecks(templateId){
+  const tpl = await db.get(templateId);
+  const muscles = (tpl.exercises || []).flatMap(ex => ex.muscleGroups || []);
+  await checkAndWarnThenProceed(muscles, () => actuallyStartTemplate(tpl));
+}
+
+async function actuallyStartTemplate(tpl){
+  // Prefill each set with what was actually lifted last time, so you're editing/confirming
+  // a number instead of starting from blank. Prefer "last time I ran this exact template";
+  // if this template has never been completed before (or this exercise was just added to it),
+  // fall back to "last time I did this exercise at all" so a brand-new template still isn't
+  // starting from zero. See findLastPerformance() for the matching rules.
+  const history = await getWorkoutHistory(500);
+  const doc = {
+    _id: 'workout:' + new Date().toISOString(),
+    type: 'workout',
+    status: 'active',
+    startedAt: Date.now(),
+    finishedAt: null,
+    templateId: tpl._id,
+    templateName: tpl.name,
+    exercises: (tpl.exercises || []).map(ex => {
+      const setCount = ex.setCount || 3;
+      const prev = findLastPerformance(history, ex.exerciseId, tpl._id)
+                || findLastPerformance(history, ex.exerciseId, null);
+      const prevSets = prev ? prev.sets.filter(s=>s.weight !== '' && s.weight != null) : [];
+      return {
+        exerciseId: ex.exerciseId,
+        name: ex.name,
+        muscleGroups: ex.muscleGroups || [],
+        restSeconds: ex.restSeconds || 90,
+        // Beyond the last logged set count, repeat its final set's weight/reps rather than
+        // going blank (mirrors the existing "+ Add Set" behavior of copying the prior row).
+        sets: Array.from({length: setCount}, (_, i) => {
+          const src = prevSets[i] || prevSets[prevSets.length - 1];
+          return { weight: src ? src.weight : '', reps: src ? src.reps : '', done:false };
+        })
+      };
+    })
+  };
+  await db.put(doc);
+  renderWorkoutsHome();
+}
+
+document.getElementById('cancelWorkoutBtn').addEventListener('click', async ()=>{
+  if(!(await appConfirm('Discard this workout? This cannot be undone.'))) return;
+  stopLiveTimer();
+  const doc = await db.get(activeWorkout._id);
+  await db.remove(doc);
+  renderWorkoutsHome();
+});
+
+document.getElementById('finishWorkoutBtn').addEventListener('click', async ()=>{
+  stopLiveTimer();
+  const doc = await db.get(activeWorkout._id);
+  doc.status = 'completed';
+  doc.finishedAt = Date.now();
+  doc.durationSeconds = Math.floor((doc.finishedAt - doc.startedAt) / 1000);
+  doc.volume = computeVolumeLbs(doc.exercises, true); // canonical lbs, converted for display at render time
+  await db.put(doc);
+  // Ad hoc workouts (started via the plain "+ Start Workout" button, so no templateId) have
+  // nowhere for their exercise list to live for next time. Offer to turn the session just
+  // finished into a reusable template rather than letting it disappear into history.
+  if(!doc.templateId && doc.exercises.length){
+    const wantsTemplate = await appConfirm('Save this workout as a reusable template?', {confirmLabel:'Save as Template', danger:false});
+    if(wantsTemplate){
+      templateDraft = {
+        name: '',
+        exercises: doc.exercises.map(ex=>({
+          exerciseId: ex.exerciseId, name: ex.name, muscleGroups: ex.muscleGroups || [],
+          setCount: ex.sets.length || 3, restSeconds: ex.restSeconds || 90
+        }))
+      };
+      renderTemplateModal({focusName:true}); // saveTemplateDraft() calls renderWorkoutsHome() on save/close
+      return;
+    }
+  }
+  renderWorkoutsHome();
+});
+
+function renderExerciseBlocks(){
+  const container = document.getElementById('exerciseBlocks');
+  if(!activeWorkout.exercises.length){
+    container.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M4 9l3-3 3 3M20 15l-3 3-3-3"/></svg>
+      <p>No exercises yet</p>
+      <div class="hint">Tap "Add Exercise" to get started</div>
+    </div>`;
+    return;
+  }
+  container.innerHTML = activeWorkout.exercises.map((ex, exIdx)=>{
+    // All-time PR for the header line, and per-set "did this row just set it" for the trophy
+    // icon: walk sets in order starting from the historical best and bump it as we pass each
+    // done set that beats it, so multiple PRs in one session (e.g. two ascending top sets) each
+    // get their own trophy rather than only the final heaviest one.
+    const historyBest = prMap.get(ex.exerciseId)?.weight || 0;
+    let runningBest = historyBest;
+    const rows = ex.sets.map((set, sIdx)=>{
+      const dispWeight = (set.weight === '' || set.weight == null) ? '' : formatWeight(lbsToDisplay(Number(set.weight)));
+      const wt = Number(set.weight) || 0;
+      const isNewPR = set.done && wt > 0 && wt > runningBest;
+      if(isNewPR) runningBest = wt;
+      const checkContent = isNewPR
+        ? '🏆'
+        : (set.done ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' : '');
+      return `
+      <tr data-ex="${exIdx}" data-set="${sIdx}">
+        <td class="set-num">${sIdx+1}</td>
+        <td><input type="text" inputmode="decimal" class="weight-input" value="${dispWeight}" placeholder="0"></td>
+        <td><input type="number" inputmode="numeric" class="reps-input" value="${set.reps ?? ''}" placeholder="0"></td>
+        <td><button class="set-check ${set.done ? 'done':''} ${isNewPR ? 'pr':''}" data-action="toggle-set">
+          ${checkContent}
+        </button></td>
+      </tr>`;
+    }).join('');
+    const prLabel = runningBest > 0 ? `<div class="pr-tag">🏆 PR: ${formatWeight(lbsToDisplay(runningBest))} ${unitLabel()}</div>` : '';
+    return `<div class="ex-block" data-ex="${exIdx}">
+      <div class="ex-block-head">
+        <div style="display:flex; align-items:flex-start; gap:4px; min-width:0; flex:1;">
+          <button class="drag-handle" data-action="ex-drag" aria-label="Drag to reorder" style="margin-top:2px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.6"/><circle cx="16" cy="6" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="16" cy="12" r="1.6"/><circle cx="8" cy="18" r="1.6"/><circle cx="16" cy="18" r="1.6"/></svg>
+          </button>
+          <div style="min-width:0;">
+            <h3>${ex.name}</h3>
+            <div class="muscle-tag">${(ex.muscleGroups||[]).join(' · ')}</div>
+            ${prLabel}
+            <div class="rest-control">
+              <button data-action="rest-minus" data-ex="${exIdx}" aria-label="Decrease rest">−</button>
+              <span class="rest-value">${ex.restSeconds || 90}s rest</span>
+              <button data-action="rest-plus" data-ex="${exIdx}" aria-label="Increase rest">+</button>
+            </div>
+          </div>
+        </div>
+        <button class="icon-btn" data-action="remove-ex" data-ex="${exIdx}" aria-label="Remove exercise">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+        </button>
+      </div>
+      <table class="set-table">
+        <thead><tr><th>Set</th><th>${unitLabel()}</th><th>Reps</th><th>✓</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="set-row-actions">
+        <button class="add-set-btn" data-action="add-set" data-ex="${exIdx}">+ Add Set</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Delegated events inside the active session (inputs + buttons are re-rendered often)
+document.getElementById('exerciseBlocks').addEventListener('click', async (e)=>{
+  const addSetBtn = e.target.closest('[data-action="add-set"]');
+  const toggleBtn = e.target.closest('[data-action="toggle-set"]');
+  const removeBtn = e.target.closest('[data-action="remove-ex"]');
+  const restMinusBtn = e.target.closest('[data-action="rest-minus"]');
+  const restPlusBtn = e.target.closest('[data-action="rest-plus"]');
+
+  if(addSetBtn){
+    const exIdx = +addSetBtn.dataset.ex;
+    const sets = activeWorkout.exercises[exIdx].sets;
+    const last = sets[sets.length-1];
+    sets.push({weight: last ? last.weight : '', reps: last ? last.reps : '', done:false});
+    await persistActiveWorkout();
+    renderExerciseBlocks();
+  }
+  if(removeBtn){
+    const exIdx = +removeBtn.dataset.ex;
+    activeWorkout.exercises.splice(exIdx,1);
+    await persistActiveWorkout();
+    renderExerciseBlocks();
+  }
+  if(restMinusBtn || restPlusBtn){
+    const exIdx = +(restMinusBtn || restPlusBtn).dataset.ex;
+    const ex = activeWorkout.exercises[exIdx];
+    const current = ex.restSeconds || 90;
+    ex.restSeconds = restPlusBtn ? current + 15 : Math.max(15, current - 15);
+    await persistActiveWorkout();
+    renderExerciseBlocks();
+  }
+  if(toggleBtn){
+    const row = toggleBtn.closest('tr');
+    const exIdx = +row.dataset.ex, sIdx = +row.dataset.set;
+    const ex = activeWorkout.exercises[exIdx];
+    const set = ex.sets[sIdx];
+    set.done = !set.done;
+    set.completedAt = set.done ? Date.now() : null;
+    // No explicit "record a hit" call needed here — the recovery engine derives muscle state
+    // directly from set.completedAt across workout history (see refreshMuscleStats), so simply
+    // persisting this timestamp is enough. As a side effect this is now correctly two-way:
+    // unchecking a set removes its contribution to the heat map/warnings on the next refresh,
+    // not just adding one.
+    await persistActiveWorkout();
+    renderExerciseBlocks();
+    if(set.done) launchRestTimer(ex.restSeconds || 90);
+  }
+});
+
+// Persist weight/reps as the person types (debounced) without losing focus by re-rendering.
+// Weight is entered in the currently displayed unit but stored canonically as lbs.
+let inputDebounce = null;
+document.getElementById('exerciseBlocks').addEventListener('input', (e)=>{
+  const row = e.target.closest('tr');
+  if(!row) return;
+  const exIdx = +row.dataset.ex, sIdx = +row.dataset.set;
+  const set = activeWorkout.exercises[exIdx].sets[sIdx];
+  if(e.target.classList.contains('weight-input')){
+    sanitizeDecimalInput(e.target, 2);
+    const raw = e.target.value;
+    const parsed = parseWeightInput(raw);
+    set.weight = (raw === '' || isNaN(parsed)) ? '' : String(displayToLbs(parsed));
+  }
+  if(e.target.classList.contains('reps-input')) set.reps = e.target.value;
+  clearTimeout(inputDebounce);
+  inputDebounce = setTimeout(persistActiveWorkout, 400);
+});
+
+async function persistActiveWorkout(){
+  const doc = await db.get(activeWorkout._id);
+  doc.exercises = activeWorkout.exercises;
+  const res = await db.put(doc);
+  activeWorkout._rev = res.rev;
+  updateLiveVolume();
+}
+
+// Drag-to-reorder for the active-workout exercise cards — same mechanism as the template
+// builder's list (see enableDragReorder). Wired up once here rather than per-render like the
+// template list, because #exerciseBlocks itself is a persistent DOM node (only its innerHTML
+// is replaced on each renderExerciseBlocks() call) — attaching once avoids piling up duplicate
+// listeners. Cards scroll with the page (#mainView), not their own container, so that's passed
+// as the scroller for edge auto-scroll.
+enableDragReorder(
+  document.getElementById('exerciseBlocks'), '.drag-handle', '.ex-block', 'ex',
+  (newOrder)=>{
+    activeWorkout.exercises = newOrder.map(i => activeWorkout.exercises[i]);
+    persistActiveWorkout();
+    renderExerciseBlocks();
+  },
+  document.getElementById('mainView')
+);
+
+/* ---------- Add Exercise picker ---------- */
+document.getElementById('addExerciseBtn').addEventListener('click', openExercisePicker);
+
+async function openExercisePicker(){
+  const exercises = await getExercises();
+  const muscleGroups = [...new Set(exercises.flatMap(e=>e.muscleGroups||[]))].sort();
+  let activeFilter = 'All';
+  const selected = new Map(); // exerciseId -> {exerciseId, name, muscleGroups} — tap to toggle, "Add" commits the batch
+  // "Last: ..." hints below each name — general (any-workout) history, since this picker isn't
+  // tied to a specific template. See findLastPerformance()/buildLastPerformedMap().
+  // Shared fetch: "Last:" only needs the most recent match (findLastPerformance stops
+  // early), but the PR line needs the full picture, so fetch generously once and derive both.
+  const pickerHistory = await getWorkoutHistory(3000);
+  const lastMap = buildLastPerformedMap(pickerHistory);
+  const prMap = buildPRMap(pickerHistory);
+
+  function pickIcon(isSelected){
+    return isSelected
+      ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0; margin-left:8px;"><circle cx="12" cy="12" r="10" fill="var(--accent)"/><path d="M7.5 12.5l3 3 6-6" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`
+      : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="flex-shrink:0; margin-left:8px;"><path d="M12 5v14M5 12h14"/></svg>`;
+  }
+
+  function renderList(query){
+    const q = (query||'').toLowerCase();
+    const filtered = exercises.filter(ex=>
+      (activeFilter==='All' || (ex.muscleGroups||[]).includes(activeFilter)) &&
+      ex.name.toLowerCase().includes(q)
+    );
+    return filtered.map(ex=>{
+      const isSelected = selected.has(ex._id);
+      const last = lastMap.get(ex._id);
+      const pr = prMap.get(ex._id);
+      return `
+      <div class="picker-item">
+        <div class="pi-main ${isSelected ? 'pi-selected' : ''}" data-id="${ex._id}" data-name="${ex.name}" data-muscles="${(ex.muscleGroups||[]).join(',')}">
+          <div style="min-width:0;">
+            <div class="pi-name">${ex.name}</div>
+            <div class="pi-muscle">${(ex.muscleGroups||[]).join(' · ')}</div>
+            ${last ? `<div class="pi-last">Last: ${formatSetsSummary(last.sets)} ${unitLabel()}</div>` : ''}
+            ${pr ? `<div class="pi-last pi-pr">🏆 PR: ${formatWeight(lbsToDisplay(pr.weight))} ${unitLabel()}</div>` : ''}
+          </div>
+          ${pickIcon(isSelected)}
+        </div>
+        <button class="icon-btn" data-action="delete-exercise" data-exid="${ex._id}" aria-label="Delete exercise" style="flex-shrink:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+        </button>
+      </div>`;
+    }).join('') || `<div class="empty-state"><p>No matches</p></div>`;
+  }
+
+  openPickerModal(`
+    <div class="modal-title">Add Exercise</div>
+    <input type="text" id="exSearchInput" placeholder="Search exercises…" style="margin-bottom:12px;">
+    <div class="chip-row" id="muscleChips">
+      <div class="chip active" data-m="All">All</div>
+      ${muscleGroups.map(m=>`<div class="chip" data-m="${m}">${m}</div>`).join('')}
+    </div>
+    <div class="picker-list" id="pickerList">${renderList('')}</div>
+    <button class="btn btn-ghost" id="createCustomExBtn" style="margin-top:12px;">+ Create Custom Exercise</button>
+    <button class="btn btn-primary" id="addSelectedExBtn" style="margin-top:10px; display:none;"></button>
+  `);
+
+  const searchInput = document.getElementById('exSearchInput');
+  const list = document.getElementById('pickerList');
+  const chips = document.getElementById('muscleChips');
+  const addBtn = document.getElementById('addSelectedExBtn');
+
+  function syncAddBtn(){
+    if(selected.size === 0){ addBtn.style.display = 'none'; return; }
+    addBtn.style.display = 'block';
+    addBtn.textContent = `Add ${selected.size} Exercise${selected.size > 1 ? 's' : ''}`;
+  }
+
+  document.getElementById('createCustomExBtn').addEventListener('click', ()=>{
+    openCreateExerciseModal(openExercisePicker);
+  });
+  searchInput.addEventListener('input', ()=>{ list.innerHTML = renderList(searchInput.value); });
+  chips.addEventListener('click', (e)=>{
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    chips.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    activeFilter = chip.dataset.m;
+    list.innerHTML = renderList(searchInput.value);
+  });
+  list.addEventListener('click', (e)=>{
+    const delBtn = e.target.closest('[data-action="delete-exercise"]');
+    if(delBtn){
+      handleDeleteExercise(delBtn.dataset.exid, openExercisePicker);
+      return;
+    }
+    const item = e.target.closest('.pi-main');
+    if(!item) return;
+    const exerciseId = item.dataset.id;
+    if(selected.has(exerciseId)){
+      selected.delete(exerciseId);
+    }else{
+      selected.set(exerciseId, {
+        exerciseId, name: item.dataset.name,
+        muscleGroups: item.dataset.muscles ? item.dataset.muscles.split(',') : []
+      });
+    }
+    list.innerHTML = renderList(searchInput.value);
+    syncAddBtn();
+  });
+  addBtn.addEventListener('click', ()=>{
+    const picks = [...selected.values()];
+    if(!picks.length) return;
+    const allMuscles = picks.flatMap(p=>p.muscleGroups);
+    checkAndWarnThenProceed(allMuscles, async ()=>{
+      picks.forEach(p=>{
+        // Prefill the single starting set from general exercise history (no template context
+        // here — this is an ad hoc add mid-workout), same rule as the picker's "Last:" hint.
+        const last = lastMap.get(p.exerciseId);
+        const lastSet = last && last.sets.find(s=>s.weight !== '' && s.weight != null);
+        activeWorkout.exercises.push({
+          exerciseId: p.exerciseId, name: p.name, muscleGroups: p.muscleGroups, restSeconds: 90,
+          sets: [{weight: lastSet ? lastSet.weight : '', reps: lastSet ? lastSet.reps : '', done:false}]
+        });
+      });
+      await persistActiveWorkout();
+      closeModal();
+      renderExerciseBlocks();
+    }, ()=> openExercisePicker());
+  });
+}
+
+/* ---------- Create Custom Exercise ---------- */
+function openCreateExerciseModal(onSaved){
+  const selected = new Set();
+  openModal(`
+    <div class="modal-title">Custom Exercise</div>
+    <label class="field-label">Exercise Name</label>
+    <input type="text" id="customExNameInput" placeholder="e.g. Cable Pullover">
+    <label class="field-label" style="margin-top:16px;">Target Muscles (select one or more)</label>
+    <div id="customExMuscleChips">
+      ${Object.entries(MUSCLE_TAXONOMY).map(([parent, subs])=>`
+        <div style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin:12px 0 6px;">${parent}</div>
+        <div class="chip-row" style="margin-bottom:0;">
+          ${subs.map(m=>`<div class="chip" data-m="${m}">${m}</div>`).join('')}
+        </div>
+      `).join('')}
+    </div>
+    <button class="btn btn-primary" id="customExSaveBtn" style="margin-top:22px;">Save Exercise</button>
+  `);
+  document.getElementById('customExMuscleChips').addEventListener('click', (e)=>{
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    const m = chip.dataset.m;
+    if(selected.has(m)){ selected.delete(m); chip.classList.remove('active'); }
+    else{ selected.add(m); chip.classList.add('active'); }
+  });
+  document.getElementById('customExSaveBtn').addEventListener('click', async ()=>{
+    const name = document.getElementById('customExNameInput').value.trim();
+    if(!name){ await appAlert('Give the exercise a name.'); return; }
+    if(selected.size === 0){ await appAlert('Select at least one target muscle.'); return; }
+    await db.put({
+      _id: 'exercise:' + uuid(), type:'exercise', name, muscleGroups: [...selected], custom:true, createdAt: Date.now()
+    });
+    onSaved(); // hands control back to whichever picker opened this (workout or template)
+  });
+}
+
+/* =========================================================================
+   WORKOUT TEMPLATES — build once, start with exercises/sets pre-filled
+   ========================================================================= */
+let templateDraft = null; // { name, exercises: [{exerciseId,name,muscleGroups:[...],setCount}], _editId?, createdAt? }
+
+document.getElementById('newTemplateBtn').addEventListener('click', ()=>{
+  templateDraft = {name:'', exercises: []};
+  renderTemplateModal({focusName:true});
+});
+
+// Loads an existing template into templateDraft and opens the same builder UI used for
+// creating one — saveTemplateDraft() below detects _editId and updates in place instead of
+// inserting a new doc.
+async function openEditTemplateModal(templateId){
+  const tpl = await db.get(templateId);
+  templateDraft = {
+    name: tpl.name,
+    exercises: (tpl.exercises||[]).map(ex=>({ ...ex, muscleGroups: [...(ex.muscleGroups||[])] })),
+    _editId: tpl._id,
+    createdAt: tpl.createdAt
+  };
+  renderTemplateModal();
+}
+
+// `focusName` only defaults true for the very first render of a brand-new template (nice UX:
+// keyboard is already up so you can start typing a name immediately). Every other call to this
+// function — adding an exercise, adjusting sets/rest, removing an exercise — re-renders the same
+// sheet and must NOT steal focus back to the name field, or the keyboard pops up unprompted on
+// every tap. We only re-focus it if it was already the focused element going into the re-render.
+function renderTemplateModal(opts={}){
+  const isEdit = !!templateDraft._editId;
+  const wasNameFocused = document.activeElement && document.activeElement.id === 'templateNameInput';
+  let selStart, selEnd;
+  if(wasNameFocused){ selStart = document.activeElement.selectionStart; selEnd = document.activeElement.selectionEnd; }
+
+  openModal(`
+    <div class="modal-title">${isEdit ? 'Edit Template' : 'New Template'}</div>
+    <label class="field-label">Template Name</label>
+    <input type="text" id="templateNameInput" placeholder="e.g. Push Day" value="${templateDraft.name.replace(/"/g,'&quot;')}">
+    <div class="section-title" style="margin-top:18px;">Exercises</div>
+    <div id="templateExList" class="picker-list" style="max-height:34vh;">${renderTemplateExList()}</div>
+    <button class="btn btn-ghost" id="templateAddExBtn" style="margin:12px 0 10px;">+ Add Exercise</button>
+    <button class="btn btn-primary" id="templateSaveBtn">${isEdit ? 'Save Changes' : 'Save Template'}</button>
+  `);
+
+  document.getElementById('templateNameInput').addEventListener('input', (e)=>{
+    templateDraft.name = e.target.value;
+  });
+  document.getElementById('templateAddExBtn').addEventListener('click', openTemplateExercisePicker);
+  document.getElementById('templateSaveBtn').addEventListener('click', saveTemplateDraft);
+  document.getElementById('templateExList').addEventListener('click', (e)=>{
+    const rm = e.target.closest('[data-action="remove-tex"]');
+    const plus = e.target.closest('[data-action="tex-set-plus"]');
+    const minus = e.target.closest('[data-action="tex-set-minus"]');
+    const restPlus = e.target.closest('[data-action="tex-rest-plus"]');
+    const restMinus = e.target.closest('[data-action="tex-rest-minus"]');
+    if(rm){ templateDraft.exercises.splice(+rm.dataset.i, 1); renderTemplateModal(); }
+    if(plus){ templateDraft.exercises[+plus.dataset.i].setCount++; renderTemplateModal(); }
+    if(minus){
+      const ex = templateDraft.exercises[+minus.dataset.i];
+      ex.setCount = Math.max(1, ex.setCount - 1);
+      renderTemplateModal();
+    }
+    if(restPlus){
+      const ex = templateDraft.exercises[+restPlus.dataset.i];
+      ex.restSeconds = (ex.restSeconds || 90) + 15;
+      renderTemplateModal();
+    }
+    if(restMinus){
+      const ex = templateDraft.exercises[+restMinus.dataset.i];
+      ex.restSeconds = Math.max(15, (ex.restSeconds || 90) - 15);
+      renderTemplateModal();
+    }
+  });
+  enableTemplateExDrag(document.getElementById('templateExList'));
+
+  if(opts.focusName || wasNameFocused){
+    const nameInput = document.getElementById('templateNameInput');
+    nameInput.focus();
+    if(wasNameFocused){
+      nameInput.setSelectionRange(selStart, selEnd);
+    }
+  }
+}
+
+function renderTemplateExList(){
+  if(!templateDraft.exercises.length){
+    return `<div class="empty-state" style="padding:20px 4px;"><p>No exercises added</p><div class="hint">Tap "Add Exercise" below</div></div>`;
+  }
+  // data-i on the row itself is what enableDragReorder() reads at drop time to figure out
+  // the new order — see that function for how the drag actually works.
+  return templateDraft.exercises.map((ex,i)=>`
+    <div class="picker-item" data-i="${i}">
+      <button class="drag-handle" data-action="tex-drag" aria-label="Drag to reorder">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.6"/><circle cx="16" cy="6" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="16" cy="12" r="1.6"/><circle cx="8" cy="18" r="1.6"/><circle cx="16" cy="18" r="1.6"/></svg>
+      </button>
+      <div style="min-width:0; flex:1;">
+        <div class="pi-name">${ex.name}</div>
+        <div class="pi-muscle">${(ex.muscleGroups||[]).join(' · ')}</div>
+        <div class="stepper-row">
+          <div class="rest-control">
+            <button data-action="tex-set-minus" data-i="${i}" aria-label="Decrease sets">−</button>
+            <span class="rest-value">${ex.setCount} set${ex.setCount===1 ? '' : 's'}</span>
+            <button data-action="tex-set-plus" data-i="${i}" aria-label="Increase sets">+</button>
+          </div>
+          <div class="rest-control">
+            <button data-action="tex-rest-minus" data-i="${i}" aria-label="Decrease rest">−</button>
+            <span class="rest-value">${ex.restSeconds || 90}s rest</span>
+            <button data-action="tex-rest-plus" data-i="${i}" aria-label="Increase rest">+</button>
+          </div>
+        </div>
+      </div>
+      <button class="icon-btn" data-action="remove-tex" data-i="${i}" aria-label="Remove exercise">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+// Generic Pointer-Events drag-to-reorder, shared by the template builder's exercise list and the
+// active-workout exercise cards. Not HTML5 drag-and-drop, which is unreliable on iOS Safari touch:
+// instead a fixed-position visual clone follows the finger, while the real item is hidden-but-
+// still-in-flow and gets physically moved to the drop position as you drag over other items — so
+// the browser handles the "everything else shifts out of the way" reflow for free, no manual
+// transform math on the other rows needed.
+// move/up/cancel listen on `window`, not the container or handle — NOT setPointerCapture, which
+// is what was causing the clone to get stuck on screen: capture was set on the handle, but the
+// handle physically moves in the DOM mid-drag (it's inside the item, which gets repositioned via
+// target.before()/after() as you drag over other rows), and that DOM move was silently releasing
+// pointer capture on iOS Safari — so pointerup never reached the handler and the clone was never
+// cleaned up. Plain window listeners don't depend on any element staying put, so this can't happen.
+//   container      — the list's parent element; its direct children matching itemSelector are
+//                     the draggable rows (each needs a stable data-<dataAttr> index attribute).
+//   handleSelector — what you have to grab to start a drag (e.g. '.drag-handle').
+//   itemSelector   — the draggable row itself (e.g. '.picker-item', '.ex-block').
+//   dataAttr       — which data-* attribute on each row holds its original index ('i' or 'ex').
+//   onDrop(newOrder) — called with the new order as an array of ORIGINAL indices; the caller
+//                     is responsible for reassigning its own array and re-rendering/persisting.
+//   scrollContainer — the actual scrollable ancestor to nudge when dragging near an edge, if
+//                     different from `container` itself (e.g. the page scrolls, not the list).
+function enableDragReorder(container, handleSelector, itemSelector, dataAttr, onDrop, scrollContainer){
+  const scroller = scrollContainer || container;
+  let drag = null;
+
+  function rows(){
+    return Array.from(container.querySelectorAll(':scope > ' + itemSelector));
+  }
+
+  function onPointerMove(e){
+    if(!drag || e.pointerId !== drag.pointerId) return;
+    e.preventDefault();
+    const scrollerRect = scroller.getBoundingClientRect();
+    const itemRect = drag.item.getBoundingClientRect();
+    let newTop = e.clientY - drag.grabOffsetY;
+    newTop = Math.max(scrollerRect.top, Math.min(scrollerRect.bottom - itemRect.height, newTop));
+    drag.clone.style.top = newTop + 'px';
+
+    const edge = 28;
+    if(e.clientY < scrollerRect.top + edge) scroller.scrollTop -= 8;
+    else if(e.clientY > scrollerRect.bottom - edge) scroller.scrollTop += 8;
+
+    const cloneRect = drag.clone.getBoundingClientRect();
+    const cloneMid = cloneRect.top + cloneRect.height / 2;
+    let target = null, after = false;
+    for(const el of rows()){
+      if(el === drag.item) continue;
+      const r = el.getBoundingClientRect();
+      const mid = r.top + r.height / 2;
+      if(cloneMid < mid){ target = el; after = false; break; }
+      target = el; after = true;
+    }
+    if(target){
+      if(after) target.after(drag.item);
+      else target.before(drag.item);
+    }
+  }
+
+  function endDrag(e){
+    if(!drag || (e && e.pointerId !== drag.pointerId)) return;
+    drag.clone.remove();
+    drag.item.classList.remove('drag-source');
+    const newOrder = rows().map(el => +el.dataset[dataAttr]);
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', endDrag);
+    window.removeEventListener('pointercancel', endDrag);
+    drag = null;
+    onDrop(newOrder);
+  }
+
+  container.addEventListener('pointerdown', (e)=>{
+    const handle = e.target.closest(handleSelector);
+    if(!handle) return;
+    const item = handle.closest(itemSelector);
+    if(!item || item.parentElement !== container) return;
+    e.preventDefault();
+    const rect = item.getBoundingClientRect();
+    const clone = item.cloneNode(true);
+    clone.classList.add('drag-clone');
+    Object.assign(clone.style, {
+      position:'fixed', left:rect.left+'px', top:rect.top+'px',
+      width:rect.width+'px', height:rect.height+'px', margin:'0', pointerEvents:'none', zIndex:9999
+    });
+    document.body.appendChild(clone);
+    item.classList.add('drag-source'); // hidden but keeps its slot — acts as the placeholder
+    drag = { item, clone, pointerId: e.pointerId, grabOffsetY: e.clientY - rect.top };
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+  });
+}
+
+function enableTemplateExDrag(container){
+  enableDragReorder(container, '.drag-handle', '.picker-item', 'i', (newOrder)=>{
+    templateDraft.exercises = newOrder.map(i => templateDraft.exercises[i]);
+    renderTemplateModal(); // full re-render to rebind every data-i cleanly, same pattern as every other mutation here
+  });
+}
+
+async function openTemplateExercisePicker(){
+  const exercises = await getExercises();
+  const muscleGroups = [...new Set(exercises.flatMap(e=>e.muscleGroups||[]))].sort();
+  let activeFilter = 'All';
+  const selected = new Map(); // exerciseId -> {exerciseId, name, muscleGroups} — tap to toggle, "Add" commits the batch
+  // "Last: ..." hints — general (any-workout) history. This is the template *builder*, so there's
+  // no completed run of this exact template to prefer yet; that template-specific lookup happens
+  // later, at start time, in actuallyStartTemplate().
+  // Shared fetch: "Last:" only needs the most recent match (findLastPerformance stops
+  // early), but the PR line needs the full picture, so fetch generously once and derive both.
+  const pickerHistory = await getWorkoutHistory(3000);
+  const lastMap = buildLastPerformedMap(pickerHistory);
+  const prMap = buildPRMap(pickerHistory);
+
+  function pickIcon(isSelected){
+    return isSelected
+      ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0; margin-left:8px;"><circle cx="12" cy="12" r="10" fill="var(--accent)"/><path d="M7.5 12.5l3 3 6-6" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`
+      : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="flex-shrink:0; margin-left:8px;"><path d="M12 5v14M5 12h14"/></svg>`;
+  }
+
+  function renderList(query){
+    const q = (query||'').toLowerCase();
+    const filtered = exercises.filter(ex=>
+      (activeFilter==='All' || (ex.muscleGroups||[]).includes(activeFilter)) &&
+      ex.name.toLowerCase().includes(q)
+    );
+    return filtered.map(ex=>{
+      const isSelected = selected.has(ex._id);
+      const last = lastMap.get(ex._id);
+      const pr = prMap.get(ex._id);
+      return `
+      <div class="picker-item">
+        <div class="pi-main ${isSelected ? 'pi-selected' : ''}" data-id="${ex._id}" data-name="${ex.name}" data-muscles="${(ex.muscleGroups||[]).join(',')}">
+          <div style="min-width:0;">
+            <div class="pi-name">${ex.name}</div>
+            <div class="pi-muscle">${(ex.muscleGroups||[]).join(' · ')}</div>
+            ${last ? `<div class="pi-last">Last: ${formatSetsSummary(last.sets)} ${unitLabel()}</div>` : ''}
+            ${pr ? `<div class="pi-last pi-pr">🏆 PR: ${formatWeight(lbsToDisplay(pr.weight))} ${unitLabel()}</div>` : ''}
+          </div>
+          ${pickIcon(isSelected)}
+        </div>
+        <button class="icon-btn" data-action="delete-exercise" data-exid="${ex._id}" aria-label="Delete exercise" style="flex-shrink:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+        </button>
+      </div>`;
+    }).join('') || `<div class="empty-state"><p>No matches</p></div>`;
+  }
+
+  openPickerModal(`
+    <div class="modal-title">Add Exercise</div>
+    <input type="text" id="exSearchInput" placeholder="Search exercises…" style="margin-bottom:12px;">
+    <div class="chip-row" id="muscleChips">
+      <div class="chip active" data-m="All">All</div>
+      ${muscleGroups.map(m=>`<div class="chip" data-m="${m}">${m}</div>`).join('')}
+    </div>
+    <div class="picker-list" id="pickerList">${renderList('')}</div>
+    <button class="btn btn-ghost" id="createCustomExBtn" style="margin-top:12px;">+ Create Custom Exercise</button>
+    <button class="btn btn-primary" id="addSelectedExBtn" style="margin-top:10px; display:none;"></button>
+  `);
+
+  const searchInput = document.getElementById('exSearchInput');
+  const list = document.getElementById('pickerList');
+  const chips = document.getElementById('muscleChips');
+  const addBtn = document.getElementById('addSelectedExBtn');
+
+  function syncAddBtn(){
+    if(selected.size === 0){ addBtn.style.display = 'none'; return; }
+    addBtn.style.display = 'block';
+    addBtn.textContent = `Add ${selected.size} Exercise${selected.size > 1 ? 's' : ''}`;
+  }
+
+  document.getElementById('createCustomExBtn').addEventListener('click', ()=>{
+    openCreateExerciseModal(openTemplateExercisePicker);
+  });
+  searchInput.addEventListener('input', ()=>{ list.innerHTML = renderList(searchInput.value); });
+  chips.addEventListener('click', (e)=>{
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    chips.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    activeFilter = chip.dataset.m;
+    list.innerHTML = renderList(searchInput.value);
+  });
+  list.addEventListener('click', (e)=>{
+    const delBtn = e.target.closest('[data-action="delete-exercise"]');
+    if(delBtn){
+      handleDeleteExercise(delBtn.dataset.exid, openTemplateExercisePicker);
+      return;
+    }
+    const item = e.target.closest('.pi-main');
+    if(!item) return;
+    const exerciseId = item.dataset.id;
+    if(selected.has(exerciseId)){
+      selected.delete(exerciseId);
+    }else{
+      selected.set(exerciseId, {
+        exerciseId, name: item.dataset.name,
+        muscleGroups: item.dataset.muscles ? item.dataset.muscles.split(',') : []
+      });
+    }
+    list.innerHTML = renderList(searchInput.value);
+    syncAddBtn();
+  });
+  addBtn.addEventListener('click', ()=>{
+    const picks = [...selected.values()];
+    if(!picks.length) return;
+    picks.forEach(p=>{
+      templateDraft.exercises.push({
+        exerciseId: p.exerciseId, name: p.name, muscleGroups: p.muscleGroups,
+        setCount: 3, restSeconds: 90
+      });
+    });
+    renderTemplateModal(); // back to the template sheet with the new exercises added
+  });
+}
+
+async function saveTemplateDraft(){
+  const name = (document.getElementById('templateNameInput').value || '').trim();
+  if(!name){ await appAlert('Give your template a name.'); return; }
+  if(!templateDraft.exercises.length){ await appAlert('Add at least one exercise.'); return; }
+  const exercises = templateDraft.exercises.map(ex=>({
+    exerciseId: ex.exerciseId, name: ex.name, muscleGroups: ex.muscleGroups || [],
+    setCount: ex.setCount, restSeconds: ex.restSeconds || 90
+  }));
+
+  if(templateDraft._editId){
+    // Edit mode: fetch the current rev fresh (in case sync updated it since the modal opened)
+    // and update in place — same _id, so nothing that referenced this template elsewhere breaks.
+    const existing = await db.get(templateDraft._editId);
+    existing.name = name;
+    existing.exercises = exercises;
+    existing.updatedAt = Date.now();
+    await db.put(existing);
+  }else{
+    await db.put({
+      _id: 'template:' + uuid(),
+      type: 'template',
+      name,
+      exercises,
+      createdAt: Date.now()
+    });
+  }
+  templateDraft = null;
+  closeModal();
+  renderWorkoutsHome();
+}
+
+/* =========================================================================
+   REST TIMER — countdown with audio + vibration alert
+   ========================================================================= */
+const overlay = document.getElementById('rest-timer-overlay');
+const rtClock = document.getElementById('rtClock');
+
+function formatClock(sec){
+  sec = Math.max(0, sec);
+  const m = Math.floor(sec/60), s = sec%60;
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function launchRestTimer(seconds){
+  restTotalSeconds = seconds;
+  restSecondsLeft = seconds;
+  rtClock.textContent = formatClock(restSecondsLeft);
+  overlay.classList.add('show');
+  clearInterval(restTimerInterval);
+  restTimerInterval = setInterval(()=>{
+    restSecondsLeft--;
+    rtClock.textContent = formatClock(restSecondsLeft);
+    if(restSecondsLeft <= 0){
+      finishRestTimer();
+    }
+  }, 1000);
+}
+function finishRestTimer(){
+  clearInterval(restTimerInterval);
+  overlay.classList.remove('show');
+  playAlertSound();
+  if(navigator.vibrate) navigator.vibrate([200,100,200,100,300]);
+  if('Notification' in window && Notification.permission === 'granted' && document.hidden){
+    new Notification('Rest complete', {body:'Time for your next set.'});
+  }
+}
+document.getElementById('rtSkip').addEventListener('click', finishRestTimer);
+document.getElementById('rtPlus').addEventListener('click', ()=>{ restSecondsLeft += 15; rtClock.textContent = formatClock(restSecondsLeft); });
+document.getElementById('rtMinus').addEventListener('click', ()=>{ restSecondsLeft = Math.max(0, restSecondsLeft-15); rtClock.textContent = formatClock(restSecondsLeft); });
+
+// Simple beep via Web Audio API — no external audio file needed, works offline.
+let audioCtx = null;
+function playAlertSound(){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.18, 0.36].forEach(delay=>{
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.0001, audioCtx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.35, audioCtx.currentTime + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + delay + 0.15);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(audioCtx.currentTime + delay);
+      osc.stop(audioCtx.currentTime + delay + 0.16);
+    });
+  }catch(e){ console.warn('Audio alert failed', e); }
+}
+
+/* =========================================================================
+   BOOT
+   ========================================================================= */
+async function boot(){
+  await seedExercisesIfNeeded();
+  await dedupeExercisesIfNeeded();
+  const settings = await loadSettings();
+  currentUnit = settings.unit || 'lbs';
+  if('Notification' in window && Notification.permission === 'default'){
+    // Deferred: ask for permission from the Routines tab when a reminder is actually scheduled,
+    // not on cold boot — asking up front gets reflexively denied.
+  }
+  await renderWorkoutsHome();
+  window.__currentTab = 'workouts';
+
+  // Keeps the heat map's live countdowns accurate for as long as the tab stays open, and the
+  // Saturday 00:00 cutoff correct (refreshMuscleStats' weekStartMs filter naturally excludes
+  // last-cycle's sets the moment the boundary passes — no separate reset step needed).
+  setInterval(()=>{
+    if(window.__currentTab === 'workouts' && !activeWorkout) renderHeatmap();
+  }, 60000);
+}
+boot();
+
+})();
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#0B0D0F">
+<title>GODLIKE</title>
+<style>
+  /* ============ DESIGN TOKENS ============ */
+  :root{
+    --bg:#0B0D0F;
+    --surface:#16181A;
+    --surface-2:#1E2023;
+    --surface-3:#28292C;
+    --border:#2C2E31;
+    --text:#F2F2F3;
+    --text-dim:#8F9195;
+    --text-faint:#57595D;
+    --accent:#FF2A3B;       /* premium gym red — Workouts */
+    --accent-dim:#5C0F16;
+    --accent-2:#3DA5E8;     /* steel blue — Nutrition */
+    --accent-3:#6DBE8A;     /* Routines */
+    --accent-4:#B187E8;     /* Notes */
+    --accent-5:#E8A23D;     /* Nutrition (food logging) */
+    --success:#4CAF6D;
+    --danger:#FF2A3B;
+    --radius:14px;
+    --radius-sm:9px;
+    --tabbar-h:64px;
+    --header-h:56px;
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-t: env(safe-area-inset-top, 0px);
+    --font-display: 'Oswald', 'Arial Narrow', sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  }
+  @font-face{
+    font-family:'Oswald';
+    src:local('Oswald');
+    font-display:swap;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%; background:var(--bg); color:var(--text);
+    font-family:var(--font-body); overscroll-behavior-y:none; -webkit-user-select:none; user-select:none;
+  }
+  input,textarea{-webkit-user-select:text; user-select:text;}
+  #app{
+    display:flex; flex-direction:column; height:100vh; height:100dvh; max-width:560px; margin:0 auto;
+    position:relative; overflow:hidden;
+  }
+
+  /* ============ HEADER ============ */
+  header.top{
+    height:calc(var(--header-h) + var(--safe-t)); padding-top:var(--safe-t);
+    display:flex; align-items:center; justify-content:space-between;
+    padding-left:18px; padding-right:14px; border-bottom:1px solid var(--border);
+    flex-shrink:0; background:var(--bg); z-index:20;
+  }
+  header.top h1{
+    font-family:var(--font-display); font-weight:600; font-size:20px; letter-spacing:0.5px;
+    margin:0; text-transform:uppercase;
+  }
+  header.top h1 span{color:var(--tab-accent, var(--accent));}
+  .header-right{display:flex; align-items:center; gap:4px;}
+  .icon-btn{
+    background:none; border:none; color:var(--text-dim); width:38px; height:38px;
+    display:flex; align-items:center; justify-content:center; border-radius:50%;
+  }
+  .icon-btn:active{background:var(--surface-2);}
+
+  /* ============ MAIN VIEW ============ */
+  main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:24px;}
+  .view{display:none; padding:16px; animation:fadeIn .18s ease;}
+  .view.active{display:block;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  .section-title{
+    font-family:var(--font-display); text-transform:uppercase; letter-spacing:1px;
+    font-size:13px; color:var(--text-dim); margin:22px 0 10px; font-weight:500;
+  }
+  .section-title:first-child{margin-top:4px;}
+
+  /* ============ TAB BAR ============ */
+  nav.tabbar{
+    flex-shrink:0; display:flex; border-top:1px solid var(--border); background:var(--bg);
+    padding-bottom:var(--safe-b); height:calc(var(--tabbar-h) + var(--safe-b)); z-index:20;
+  }
+  .tab-btn{
+    flex:1; background:none; border:none; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:4px; color:var(--text-faint); font-family:var(--font-body);
+    font-size:11px; font-weight:600; letter-spacing:0.3px; padding:6px 0 2px;
+  }
+  .tab-btn svg{width:22px; height:22px; stroke:var(--text-faint); fill:none; stroke-width:1.8;}
+  .tab-btn.active{color:var(--tab-color);}
+  .tab-btn.active svg{stroke:var(--tab-color);}
+  .tab-btn[data-tab="workouts"]{--tab-color:var(--accent);}
+  .tab-btn[data-tab="weight"]{--tab-color:var(--accent-2);}
+  .tab-btn[data-tab="nutrition"]{--tab-color:var(--accent-5);}
+  .tab-btn[data-tab="routines"]{--tab-color:var(--accent-3);}
+  .tab-btn[data-tab="notes"]{--tab-color:var(--accent-4);}
+
+  /* ============ SHARED UI ============ */
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:16px; margin-bottom:12px;
+  }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    font-family:var(--font-body); font-weight:600; font-size:15px; border:none; border-radius:var(--radius-sm);
+    padding:14px 18px; min-height:48px; cursor:pointer; width:100%;
+  }
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-primary:active{background:#D6202F;}
+  .btn-ghost{background:var(--surface-2); color:var(--text); border:1px solid var(--border);}
+  .btn-ghost:active{background:var(--surface-3);}
+  .btn-danger{background:rgba(232,97,93,0.12); color:var(--danger); border:1px solid rgba(232,97,93,0.3);}
+  .btn-sm{
+    min-height:38px; padding:8px 14px; font-size:13px; width:auto;
+    border-radius:var(--radius-sm); font-family:var(--font-body); font-weight:600; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .empty-state{
+    text-align:center; padding:48px 20px; color:var(--text-faint);
+  }
+  .empty-state svg{width:44px; height:44px; stroke:var(--text-faint); margin-bottom:12px; fill:none; stroke-width:1.4;}
+  .empty-state p{margin:4px 0; font-size:14px;}
+  .empty-state .hint{font-size:12px; color:var(--text-faint);}
+
+  input[type=text], input[type=number], textarea, select{
+    width:100%; background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+    padding:12px 14px; border-radius:var(--radius-sm); font-size:16px; font-family:var(--font-body);
+  }
+  input:focus, textarea:focus, select:focus{outline:none; border-color:var(--tab-accent, var(--accent));}
+  label.field-label{font-size:12px; color:var(--text-dim); margin:0 0 6px 2px; display:block; font-weight:600; text-transform:uppercase; letter-spacing:0.4px;}
+
+  /* ============ MODAL ============
+     Every modal in the app floats as a centered, keyboard-safe dialog rather than sliding up
+     as a bottom sheet — a bottom sheet anchored to the screen's bottom edge is exactly what
+     gets hidden behind the iOS on-screen keyboard in a standalone "Add to Home Screen" app,
+     since 100vh/inset:0 don't reliably shrink when the keyboard opens there. syncModalViewport()
+     (below, near openModal) tracks the actual visible area above the keyboard via the
+     visualViewport API and keeps the backdrop/sheet sized to it, for every modal, always. */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; display:flex;
+    align-items:center; justify-content:center; padding:16px;
+    opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  .modal-backdrop.open{opacity:1; pointer-events:auto;}
+  .modal-sheet{
+    background:var(--surface); width:100%; max-width:560px; border-radius:20px;
+    padding:20px 18px calc(20px + var(--safe-b)); overflow-y:auto;
+    transform:scale(0.96); opacity:0; transition:opacity .2s, transform .2s;
+    border:1px solid var(--border);
+  }
+  .modal-backdrop.open .modal-sheet{transform:scale(1); opacity:1;}
+  .modal-title{font-family:var(--font-display); text-transform:uppercase; font-size:17px; letter-spacing:0.5px; margin:0 0 16px;}
+
+  /* ---- "Fill" variant, for the exercise pickers specifically ----
+     A plain centered .modal-sheet sizes to its content, which for these is the problem: with
+     1 search result it shrinks down to a tiny box. This variant is a genuinely fixed-height
+     dialog (see syncModalViewport) where only the list is allowed to flex/grow/shrink to fill
+     the remaining space — so its size never depends on how many results are showing. */
+  .modal-sheet.fill-sheet{
+    display:flex; flex-direction:column; overflow-y:hidden;
+  }
+  /* Every direct child (title, search input, chip row, footer buttons) keeps its natural size —
+     only the list is allowed to flex/shrink. Without this, when total content is slightly
+     taller than the fixed sheet height, flexbox shrinks EVERY child by default (including the
+     chip row), squashing the pill-shaped chips and pushing their text outside the bubble. */
+  .modal-sheet.fill-sheet > *{flex-shrink:0;}
+  .modal-sheet.fill-sheet .picker-list{flex:1 1 auto; min-height:0; max-height:none; overflow-y:auto;}
+
+  /* ============ APP DIALOG (confirm/alert replacement) ============ */
+  .app-dialog-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:400; display:flex; align-items:center; justify-content:center;
+    padding:24px; opacity:0; pointer-events:none; transition:opacity .15s;
+  }
+  .app-dialog-backdrop.open{opacity:1; pointer-events:auto;}
+  .app-dialog{
+    background:var(--surface-2); width:100%; max-width:340px; border-radius:16px; padding:20px;
+    border:1px solid var(--border); transform:scale(0.94); transition:transform .15s;
+  }
+  .app-dialog-backdrop.open .app-dialog{transform:scale(1);}
+  .app-dialog-title{font-family:var(--font-display); text-transform:uppercase; font-size:15px; letter-spacing:0.5px; margin:0 0 10px;}
+  .app-dialog-msg{font-size:14px; color:var(--text-dim); line-height:1.5; margin-bottom:20px;}
+  .app-dialog-actions{display:flex; flex-direction:column; gap:8px;}
+  .app-dialog-actions .btn{min-height:44px;}
+
+  /* ============ WORKOUTS TAB ============ */
+  .unit-toggle-row{display:flex; justify-content:flex-end; margin-bottom:10px;}
+  .unit-toggle{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text-dim);
+    font-size:11px; font-weight:700; letter-spacing:0.5px; padding:7px 14px; border-radius:20px;
+  }
+  .unit-toggle.kg{color:#fff; background:var(--accent); border-color:var(--accent);}
+
+  .heatmap-row{display:flex; justify-content:center;}
+  .heatmap-row svg{width:100%; max-width:340px; height:auto; display:block; margin:0 auto;}
+  .heatmap-legend{display:flex; justify-content:center; gap:14px; margin-top:12px; font-size:11px; color:var(--text-dim); flex-wrap:wrap;}
+  .heatmap-legend .dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; vertical-align:middle;}
+  .heatmap-legend .dot.dim{background:transparent; border:1.5px solid var(--text-faint);}
+  .heatmap-legend .dot.half{background:rgba(255,42,59,0.5); border:1.5px solid rgba(255,42,59,0.5);}
+  .heatmap-legend .dot.full{background:#FF2A3B; border:1.5px solid #FF2A3B;}
+  .heatmap-detail{
+    margin-top:12px; padding:10px 12px; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:var(--radius-sm); font-size:12px; color:var(--text-dim); text-align:center; min-height:18px;
+  }
+  .heatmap-detail strong{color:var(--text); font-weight:700;}
+  .muscle-group{cursor:pointer;}
+  .muscle-group path{
+    fill:var(--surface-3) !important; transition:fill .3s ease, filter .3s ease;
+  }
+  /* Tier 1 — hit once this cycle: moderate red (50%) */
+  .muscle-group.tier-1 path{ fill:#ef4444 !important; }
+  /* Tier 2 — hit twice+ this cycle: intense, glowing red (100%) */
+  .muscle-group.tier-2 path{
+    fill:#dc2626 !important;
+    filter:drop-shadow(0 0 4px rgba(220,38,38,0.9)) drop-shadow(0 0 9px rgba(220,38,38,0.5));
+  }
+  .anatomy-art{pointer-events:none;}
+  .warn-line{font-size:14px; color:var(--text); background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; margin-bottom:8px;}
+
+  .week-row{display:flex; gap:6px; margin-bottom:18px;}
+  .week-day{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; padding:9px 0 8px;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);
+  }
+  .week-day .wd-label{font-size:10px; color:var(--text-faint); text-transform:uppercase; font-weight:700; letter-spacing:0.3px;}
+  .week-day .wd-num{font-family:var(--font-display); font-size:15px; color:var(--text-dim);}
+  .week-day.today{border-color:var(--accent);}
+  .week-day.today .wd-num{color:var(--text);}
+  .week-day.done{background:var(--accent); border-color:var(--accent);}
+  .week-day.done .wd-label, .week-day.done .wd-num{color:#fff;}
+
+  .template-item{
+    display:flex; justify-content:space-between; align-items:center; padding:12px 4px;
+    border-bottom:1px solid var(--border); gap:10px;
+  }
+  .template-item:last-child{border-bottom:none;}
+  .template-item .h-date{font-weight:600; font-size:14px;}
+  .template-item .h-sub{font-size:12px; color:var(--text-dim); margin-top:2px;}
+  .template-item .t-actions{display:flex; align-items:center; gap:6px; flex-shrink:0;}
+
+  .stat-row{display:flex; gap:10px; margin-bottom:6px;}
+  .stat-box{flex:1; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; text-align:center;}
+  .stat-box .num{font-family:var(--font-display); font-size:26px; color:var(--accent);}
+  .stat-box .lbl{font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px;}
+
+  .history-item{
+    display:flex; justify-content:space-between; align-items:center; padding:14px 4px;
+    border-bottom:1px solid var(--border);
+  }
+  .history-item:last-child{border-bottom:none;}
+  .history-item .h-date{font-weight:600; font-size:14px;}
+  .history-item .h-sub{font-size:12px; color:var(--text-dim); margin-top:2px;}
+  .history-item .h-vol{font-family:var(--font-display); color:var(--accent); font-size:17px;}
+
+  .active-workout-bar{
+    background:linear-gradient(90deg, var(--accent-dim), var(--surface-2));
+    border:1px solid var(--accent); border-radius:var(--radius); padding:14px 16px;
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;
+  }
+  .active-workout-bar .aw-eyebrow{font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.8px; font-weight:700; display:flex; align-items:center; gap:5px;}
+  .active-workout-bar .aw-eyebrow.right{justify-content:flex-end;}
+  .active-workout-bar .aw-time{font-family:var(--font-mono); color:var(--accent); font-size:20px; font-weight:600; font-variant-numeric:tabular-nums;}
+  .active-workout-bar .aw-vol{font-family:var(--font-display); color:var(--accent); font-size:18px; text-align:right;}
+  .aw-live-dot{width:7px; height:7px; border-radius:50%; background:var(--accent); flex-shrink:0; animation:awPulse 1.4s ease-out infinite;}
+  @keyframes awPulse{
+    0%{box-shadow:0 0 0 0 rgba(255,42,59,0.55);}
+    100%{box-shadow:0 0 0 8px rgba(255,42,59,0);}
+  }
+
+  .rest-control{display:flex; align-items:center; gap:6px; margin-top:6px;}
+  .rest-control .rest-value{font-size:11px; color:var(--text-dim); min-width:58px; text-align:center; font-weight:600;}
+  .rest-control button{
+    width:22px; height:22px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border);
+    color:var(--text-dim); font-size:13px; font-weight:700; line-height:1; padding:0; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .rest-control button:active{background:var(--surface-3);}
+  .stepper-row{display:flex; flex-wrap:wrap; row-gap:6px; column-gap:16px;}
+
+  .ex-block{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:14px; overflow:hidden;}
+  .ex-block-head{display:flex; justify-content:space-between; align-items:center; padding:14px 14px 10px;}
+  .ex-block-head h3{margin:0; font-size:16px; font-weight:700;}
+  .ex-block-head .muscle-tag{font-size:11px; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px;}
+  .pr-tag{font-size:11px; color:#D4AF37; font-weight:700; margin-top:2px;}
+  .set-table{width:100%; border-collapse:collapse; padding:0 10px;}
+  .set-table th{font-size:10px; color:var(--text-faint); text-transform:uppercase; padding:4px 6px; font-weight:600; text-align:center;}
+  .set-table td{padding:4px 6px; text-align:center;}
+  .set-table td.set-num{color:var(--text-dim); font-family:var(--font-mono); font-size:13px;}
+  .set-table input{
+    width:100%; text-align:center; padding:9px 2px; font-size:15px; -moz-appearance:textfield;
+  }
+  .set-table input::-webkit-outer-spin-button, .set-table input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
+  .set-check{
+    width:34px; height:34px; border-radius:9px; border:1.5px solid var(--border); background:var(--surface-2);
+    color:var(--text-faint); display:flex; align-items:center; justify-content:center; margin:0 auto;
+  }
+  .set-check.done{background:var(--success); border-color:var(--success); color:#08210F;}
+  .set-check.pr{background:#D4AF37; border-color:#D4AF37; font-size:15px;}
+  .set-row-actions{padding:8px 14px 14px; display:flex; gap:8px;}
+  .add-set-btn{
+    flex:1; background:var(--surface-2); border:1px dashed var(--border); color:var(--text-dim);
+    border-radius:var(--radius-sm); padding:10px; font-size:13px; font-weight:600;
+  }
+
+  .picker-list{max-height:50vh; overflow-y:auto; margin:0 -18px; padding:0 18px;}
+  .picker-item{
+    display:flex; justify-content:space-between; align-items:center; padding:13px 4px; border-bottom:1px solid var(--border); gap:8px;
+  }
+  .picker-item .pi-main{display:flex; justify-content:space-between; align-items:center; flex:1; min-width:0; cursor:pointer;}
+  .picker-item .pi-main.pi-selected{background:rgba(255,42,59,0.10); border-radius:10px; margin:0 -8px; padding:0 8px;}
+  .picker-item .pi-name{font-weight:600; font-size:15px;}
+  .picker-item .pi-muscle{font-size:11px; color:var(--accent); text-transform:uppercase;}
+  .pi-last{font-size:11px; color:var(--text-dim); margin-top:2px;}
+  .pi-last.pi-pr{color:#D4AF37; font-weight:700;}
+
+  /* ---- Drag-to-reorder (Pointer Events; see enableDragReorder). Used for the template builder's
+     exercise list AND the active-workout exercise cards ("add it everywhere"). ---- */
+  .drag-handle{
+    background:none; border:none; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; touch-action:none; cursor:grab;
+    color:var(--accent); padding:6px; flex-shrink:0; -webkit-tap-highlight-color:transparent;
+  }
+  .drag-handle:active{cursor:grabbing; background:var(--surface-2);}
+  .drag-source{opacity:0;}
+  /* Forced (!important) rather than relying on the cascade: this clone is a raw cloneNode() of
+     whatever it's dragging, so it also carries that item's OWN classes and their background/
+     border-radius (.ex-block already has its own card styling, .picker-item doesn't) — without
+     forcing it here, one type of dragged row looked like a plain box and the other like a rounded
+     bubble, depending on which ruleset happened to win. This makes every dragged row look like the
+     same elevated card no matter what it's dragging. */
+  .drag-clone{
+    border-radius:var(--radius-sm) !important; background:var(--surface-2) !important;
+    overflow:hidden !important; box-shadow:0 10px 30px rgba(0,0,0,0.45);
+    transform:scale(1.02); opacity:0.98; padding-left:4px; padding-right:4px;
+  }
+
+  .chip-row{display:flex; gap:8px; overflow-x:auto; padding-bottom:10px; margin-bottom:6px;}
+  .chip{
+    flex-shrink:0; padding:7px 14px; border-radius:20px; background:var(--surface-2); border:1px solid var(--border);
+    font-size:12px; color:var(--text-dim); font-weight:600; white-space:nowrap;
+  }
+  .chip.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+
+  /* ============ REST TIMER OVERLAY ============ */
+  #rest-timer-overlay{
+    position:fixed; inset:0; background:rgba(6,7,8,0.94); z-index:200; display:none;
+    flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    max-width:560px; margin:0 auto;
+  }
+  #rest-timer-overlay.show{display:flex;}
+  .rt-label{font-size:13px; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:10px;}
+  .rt-clock{font-family:var(--font-display); font-size:88px; color:var(--accent); line-height:1; font-variant-numeric:tabular-nums;}
+  .rt-controls{display:flex; gap:14px; margin-top:36px;}
+  .rt-adj{
+    width:56px; height:56px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border);
+    color:var(--text); font-size:20px; font-weight:700; line-height:1; padding:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .rt-skip{margin-top:28px; background:none; border:none; color:var(--text-dim); font-size:14px; text-decoration:underline;}
+
+  /* placeholder tabs */
+  .stub-tab{padding:60px 24px; text-align:center;}
+  .stub-tab svg{width:52px; height:52px; margin-bottom:16px;}
+  .stub-tab h2{font-family:var(--font-display); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;}
+  .stub-tab p{color:var(--text-dim); font-size:14px; line-height:1.5;}
+
+  /* ============ WEIGHT TRACKER (Weight tab) ============ */
+  .wt-log-row{display:flex; gap:10px; align-items:flex-end; margin-bottom:4px;}
+  .wt-log-row .wt-field{flex:1; min-width:0;}
+  .wt-log-row .wt-field input{padding:12px 12px;}
+  .wt-log-row .btn{width:auto; flex-shrink:0; padding:12px 18px; min-height:46px;}
+  .wt-saved-hint{font-size:12px; color:var(--success); min-height:16px; margin:8px 2px 0; opacity:0; transition:opacity .25s;}
+  .wt-saved-hint.show{opacity:1;}
+
+  .wt-range-row{display:flex; gap:8px; margin:18px 0 12px;}
+  .wt-range-btn{
+    flex:1; padding:8px 6px; border-radius:20px; background:var(--surface-2); border:1px solid var(--border);
+    font-size:12px; color:var(--text-dim); font-weight:600;
+  }
+  .wt-range-btn.active{background:var(--accent-2); color:#fff; border-color:var(--accent-2);}
+  .wt-custom-row{display:flex; gap:8px; margin-bottom:14px;}
+  .wt-custom-row input{font-size:13px; padding:10px 10px;}
+
+  .wt-chart-wrap{position:relative; user-select:none; -webkit-user-select:none;}
+  .wt-chart-wrap svg{width:100%; height:auto; display:block; overflow:visible; touch-action:none;}
+  .wt-chart-empty{padding:36px 10px; text-align:center; color:var(--text-faint); font-size:13px;}
+  .wt-stat-row{display:flex; gap:10px; margin-top:14px;}
+  .wt-stat-row .stat-box .num{color:var(--accent-2); font-size:20px;}
+  .wt-avg-delta{font-size:10px; margin-top:3px; white-space:nowrap;}
+
+  .wt-guide-line{stroke:var(--accent-2); stroke-width:1; stroke-dasharray:3 3; opacity:0; pointer-events:none;}
+  .wt-scrub-dot{fill:var(--accent-2); stroke:var(--bg); stroke-width:2; opacity:0; pointer-events:none;}
+  .wt-scrub-dot.pulse{animation:wtDotPulse 1.1s ease-out infinite;}
+  @keyframes wtDotPulse{
+    0%{ filter:drop-shadow(0 0 0 rgba(61,165,232,0.55)); }
+    70%{ filter:drop-shadow(0 0 6px rgba(61,165,232,0)); }
+    100%{ filter:drop-shadow(0 0 0 rgba(61,165,232,0)); }
+  }
+  .wt-line-path{fill:none; stroke:var(--accent-2); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round;}
+  .wt-area-path{fill:url(#wtAreaGrad); opacity:0.35;}
+  .wt-axis-label{font-size:9px; fill:var(--text-faint); font-family:var(--font-body);}
+  .wt-tooltip{
+    position:absolute; top:6px; padding:6px 10px; background:var(--surface-3); border:1px solid var(--border);
+    border-radius:8px; font-size:12px; color:var(--text); pointer-events:none; opacity:0; transition:opacity .12s;
+    white-space:nowrap; transform:translateX(-50%); z-index:5;
+  }
+  .wt-tooltip.show{opacity:1;}
+  .wt-tooltip .wt-tt-date{color:var(--text-dim); font-size:10px; text-transform:uppercase; letter-spacing:0.3px;}
+  .wt-tooltip .wt-tt-val{font-weight:700; font-family:var(--font-display); font-size:14px; color:var(--accent-2);}
+
+  .wt-avg-row{display:flex; gap:6px; margin-top:14px; overflow-x:auto; padding-bottom:2px;}
+  .wt-avg-btn{
+    flex:0 0 auto; padding:7px 12px; border-radius:20px; background:var(--surface-2); border:1px solid var(--border);
+    font-size:11px; color:var(--text-dim); font-weight:600; white-space:nowrap;
+  }
+  .wt-avg-btn.active{background:var(--surface-3); color:var(--accent-2); border-color:var(--accent-2);}
+
   .wt-log-list{max-height:340px; overflow-y:auto;}
   .wt-log-item{
     display:flex; justify-content:space-between; align-items:center; padding:12px 4px;
