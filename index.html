@@ -390,6 +390,7 @@
   .wt-chart-empty{padding:36px 10px; text-align:center; color:var(--text-faint); font-size:13px;}
   .wt-stat-row{display:flex; gap:10px; margin-top:14px;}
   .wt-stat-row .stat-box .num{color:var(--accent-2); font-size:20px;}
+  .wt-avg-delta{font-size:10px; margin-top:3px; white-space:nowrap;}
 
   .wt-guide-line{stroke:var(--accent-2); stroke-width:1; stroke-dasharray:3 3; opacity:0; pointer-events:none;}
   .wt-scrub-dot{fill:var(--accent-2); stroke:var(--bg); stroke-width:2; opacity:0; pointer-events:none;}
@@ -554,6 +555,7 @@
           <div class="stat-box" id="wtAvgStatBox">
             <div class="num" id="wtStatAvg">--</div>
             <div class="lbl">Avg</div>
+            <div class="wt-avg-delta" id="wtStatAvgDelta"></div>
           </div>
         </div>
 
@@ -1515,26 +1517,52 @@ document.getElementById('wtAvgRow').addEventListener('click', (e)=>{
   renderAvgStat();
 });
 const WT_AVG_LABELS = {'7':'7-Day Avg', '30':'30-Day Avg', '60':'60-Day Avg', '365':'Yearly Avg', 'all':'All-Time Avg'};
+// "vs last [period]" label shown under the avg number — kept short so it fits a narrow stat box.
+const WT_AVG_PREV_LABELS = {'7':'vs last wk', '30':'vs last 30d', '60':'vs last 60d', '365':'vs last yr'};
+function computeRangeAverage(fromStr, toStr){
+  if(!wtEntriesCache.length) return null;
+  const inRange = wtEntriesCache.filter(e=> e.date >= fromStr && e.date <= toStr);
+  if(!inRange.length) return null;
+  return inRange.reduce((sum,e)=> sum + e.weightLbs, 0) / inRange.length;
+}
 function computeWindowAverage(windowKey){
   if(!wtEntriesCache.length) return null;
-  let inWindow;
-  if(windowKey === 'all'){
-    inWindow = wtEntriesCache;
-  }else{
-    const days = parseInt(windowKey, 10);
-    const from = todayStr(new Date(Date.now() - days*24*60*60*1000));
-    const to = wtTodayStr();
-    inWindow = wtEntriesCache.filter(e=> e.date >= from && e.date <= to);
-  }
-  if(!inWindow.length) return null;
-  return inWindow.reduce((sum,e)=> sum + e.weightLbs, 0) / inWindow.length;
+  if(windowKey === 'all') return computeRangeAverage(wtEntriesCache[0].date, wtEntriesCache[wtEntriesCache.length-1].date);
+  const days = parseInt(windowKey, 10);
+  const from = todayStr(new Date(Date.now() - days*24*60*60*1000));
+  const to = wtTodayStr();
+  return computeRangeAverage(from, to);
+}
+// Average for the period immediately BEFORE the current window, same length — e.g. for the
+// 7-day chip this is "the 7 days before that". Without this, an "average" is just one number
+// with nothing to compare it to, which defeats the point of tracking it (adjust calories based
+// on whether the trend moved). Not defined for "all-time" — there's no prior period to compare.
+function computePrevWindowAverage(windowKey){
+  if(!wtEntriesCache.length || windowKey === 'all') return null;
+  const days = parseInt(windowKey, 10);
+  const to = todayStr(new Date(Date.now() - (days+1)*24*60*60*1000));
+  const from = todayStr(new Date(Date.now() - (2*days+1)*24*60*60*1000));
+  return computeRangeAverage(from, to);
 }
 function renderAvgStat(){
   const el = document.getElementById('wtStatAvg');
   const lbl = document.querySelector('#wtAvgStatBox .lbl');
+  const deltaEl = document.getElementById('wtStatAvgDelta');
   lbl.textContent = WT_AVG_LABELS[wtAvgWindow] || 'Avg';
   const avgLbs = computeWindowAverage(wtAvgWindow);
   el.textContent = avgLbs == null ? '--' : formatWeight(lbsToDisplay(avgLbs)) + ' ' + unitLabel();
+
+  const prevAvgLbs = computePrevWindowAverage(wtAvgWindow);
+  if(avgLbs != null && prevAvgLbs != null){
+    const deltaLbs = avgLbs - prevAvgLbs;
+    const deltaDisp = lbsToDisplay(deltaLbs);
+    const arrow = deltaLbs > 0.005 ? '▲' : (deltaLbs < -0.005 ? '▼' : '▬');
+    const sign = deltaLbs > 0 ? '+' : '';
+    deltaEl.textContent = `${arrow} ${sign}${formatWeight(deltaDisp)} ${WT_AVG_PREV_LABELS[wtAvgWindow] || ''}`;
+    deltaEl.style.color = deltaLbs > 0.005 ? 'var(--danger)' : (deltaLbs < -0.005 ? 'var(--success)' : 'var(--text-faint)');
+  }else{
+    deltaEl.textContent = '';
+  }
   document.getElementById('wtStatRow').style.display = wtEntriesCache.length ? 'flex' : 'none';
 }
 
