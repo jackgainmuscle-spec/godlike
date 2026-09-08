@@ -162,6 +162,9 @@
   }
   .modal-backdrop.open .modal-sheet{transform:scale(1); opacity:1;}
   .modal-title{font-family:var(--font-display); text-transform:uppercase; font-size:17px; letter-spacing:0.5px; margin:0 0 16px;}
+  .modal-title-row{display:flex; align-items:center; gap:2px; margin:0 0 16px;}
+  .modal-title-row .modal-title{margin:0;}
+  .modal-back-btn{margin-left:-8px; flex-shrink:0;}
 
   /* ---- "Fill" variant, for the exercise pickers specifically ----
      A plain centered .modal-sheet sizes to its content, which for these is the problem: with
@@ -2894,7 +2897,7 @@ async function openExercisePicker(){
         closeModal();
         renderExerciseBlocks();
       }, ()=> openExercisePicker());
-    });
+    }, openExercisePicker);
   });
   searchInput.addEventListener('input', ()=>{ list.innerHTML = renderList(searchInput.value); });
   chips.addEventListener('click', (e)=>{
@@ -2948,10 +2951,16 @@ async function openExercisePicker(){
 }
 
 /* ---------- Create Custom Exercise ---------- */
-function openCreateExerciseModal(onSaved){
+function openCreateExerciseModal(onSaved, onBack){
   const selected = new Set();
   openModal(`
-    <div class="modal-title">Custom Exercise</div>
+    <div class="modal-title-row">
+      ${onBack ? `
+      <button class="icon-btn modal-back-btn" id="createExBackBtn" aria-label="Back to exercise list">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>` : ''}
+      <div class="modal-title">Custom Exercise</div>
+    </div>
     <label class="field-label">Exercise Name</label>
     <input type="text" id="customExNameInput" placeholder="e.g. Cable Pullover">
     <label class="field-label" style="margin-top:16px;">Target Muscles (select one or more)</label>
@@ -2965,6 +2974,7 @@ function openCreateExerciseModal(onSaved){
     </div>
     <button class="btn btn-primary" id="customExSaveBtn" style="margin-top:22px;">Save Exercise</button>
   `);
+  if(onBack) document.getElementById('createExBackBtn').addEventListener('click', onBack);
   document.getElementById('customExMuscleChips').addEventListener('click', (e)=>{
     const chip = e.target.closest('.chip');
     if(!chip) return;
@@ -3279,7 +3289,12 @@ async function openTemplateExercisePicker(){
   }
 
   openPickerModal(`
-    <div class="modal-title">Add Exercise</div>
+    <div class="modal-title-row">
+      <button class="icon-btn modal-back-btn" id="tplPickerBackBtn" aria-label="Back to template">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="modal-title">Add Exercise</div>
+    </div>
     <input type="text" id="exSearchInput" placeholder="Search exercises…" style="margin-bottom:12px;">
     <div class="chip-row" id="muscleChips">
       <div class="chip active" data-m="All">All</div>
@@ -3290,10 +3305,12 @@ async function openTemplateExercisePicker(){
     <button class="btn btn-primary" id="addSelectedExBtn" style="margin-top:10px; display:none;"></button>
   `);
 
+  document.getElementById('tplPickerBackBtn').addEventListener('click', renderTemplateModal);
   const searchInput = document.getElementById('exSearchInput');
   const list = document.getElementById('pickerList');
   const chips = document.getElementById('muscleChips');
   const addBtn = document.getElementById('addSelectedExBtn');
+
 
   function syncAddBtn(){
     if(selected.size === 0){ addBtn.style.display = 'none'; return; }
@@ -3311,7 +3328,7 @@ async function openTemplateExercisePicker(){
         setCount: 3, restSeconds: 90
       });
       renderTemplateModal();
-    });
+    }, openTemplateExercisePicker);
   });
   searchInput.addEventListener('input', ()=>{ list.innerHTML = renderList(searchInput.value); });
   chips.addEventListener('click', (e)=>{
