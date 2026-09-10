@@ -320,6 +320,12 @@
   }
   .set-check.done{background:var(--success); border-color:var(--success); color:#08210F;}
   .set-check.pr{background:#D4AF37; border-color:#D4AF37; font-size:15px;}
+  .set-remove-btn{
+    width:26px; height:26px; border-radius:50%; background:none; border:none;
+    color:var(--text-faint); display:flex; align-items:center; justify-content:center; margin:0 auto;
+  }
+  .set-remove-btn:active{background:var(--surface-2);}
+  .set-remove-btn:disabled{opacity:0.25;}
   .set-row-actions{padding:8px 14px 14px; display:flex; gap:8px;}
   .add-set-btn{
     flex:1; background:var(--surface-2); border:1px dashed var(--border); color:var(--text-dim);
@@ -1101,7 +1107,7 @@ let muscleStatsCache = {}; // label -> {lastHitAt, sessionIds:Set<workoutId>} �
 // so it's safe to call before every overtraining check and every heat map paint rather than
 // trying to incrementally patch a cached value — that incremental-patching approach is exactly
 // what made "delete a workout" hard to keep in sync last time.
-async function refreshMuscleStats(){
+async function refreshMuscleStats(excludeWorkoutId){
   const resets = loadMuscleResets();
   const weekStartMs = getWeekStart().getTime();
   const res = await db.allDocs({ startkey:'workout:', endkey:'workout:\uffff', include_docs:true });
@@ -1109,6 +1115,15 @@ async function refreshMuscleStats(){
 
   const stats = {};
   docs.forEach(w=>{
+    // excludeWorkoutId lets a recovery check ignore the workout currently being built — see
+    // checkAndWarnThenProceed. Without this, adding a 2nd exercise for a muscle you already hit
+    // earlier THIS SAME session (e.g. leg press then leg extension, both quads, on leg day)
+    // would immediately re-trigger the 72h warning against yourself, since lastHitAt was set
+    // moments ago by the set you just logged in this very workout. A muscle you're deliberately
+    // training twice in one session isn't "still recovering" — recovery is about the gap BETWEEN
+    // sessions, not within one. Hits from any OTHER (past) session still count normally, so
+    // adding a chest press while chest is genuinely recovering from yesterday still warns.
+    if(excludeWorkoutId && w._id === excludeWorkoutId) return;
     (w.exercises||[]).forEach(ex=>{
       (ex.muscleGroups||[]).forEach(label=>{
         (ex.sets||[]).forEach(set=>{
@@ -1169,8 +1184,8 @@ function buildRecoveryWarnings(muscles){
 // or an exercise is added to an active session. Skips straight to proceedFn() if nothing to warn
 // about; otherwise shows a modal with every triggered warning and lets the person cancel or
 // proceed anyway.
-async function checkAndWarnThenProceed(muscles, proceedFn, cancelFn){
-  await refreshMuscleStats();
+async function checkAndWarnThenProceed(muscles, proceedFn, cancelFn, excludeWorkoutId){
+  await refreshMuscleStats(excludeWorkoutId);
   const warnings = buildRecoveryWarnings(muscles);
   if(warnings.length === 0){ proceedFn(); return; }
   openModal(`
@@ -2685,6 +2700,9 @@ function renderExerciseBlocks(){
         <td><button class="set-check ${set.done ? 'done':''} ${isNewPR ? 'pr':''}" data-action="toggle-set">
           ${checkContent}
         </button></td>
+        <td><button class="set-remove-btn" data-action="remove-set" aria-label="Remove set" ${ex.sets.length <= 1 ? 'disabled' : ''}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button></td>
       </tr>`;
     }).join('');
     const prLabel = runningBest > 0 ? `<div class="pr-tag">🏆 PR: ${formatWeight(lbsToDisplay(runningBest))} ${unitLabel()}</div>` : '';
@@ -2700,7 +2718,7 @@ function renderExerciseBlocks(){
             ${prLabel}
             <div class="rest-control">
               <button data-action="rest-minus" data-ex="${exIdx}" aria-label="Decrease rest">−</button>
-              <span class="rest-value">${ex.restSeconds || 90}s rest</span>
+              <span class="rest-value rest-value-tap" data-action="rest-edit" data-ex="${exIdx}" role="button" aria-label="Enter custom rest time">${formatRestLabel(ex.restSeconds)}</span>
               <button data-action="rest-plus" data-ex="${exIdx}" aria-label="Increase rest">+</button>
             </div>
           </div>
@@ -2710,7 +2728,7 @@ function renderExerciseBlocks(){
         </button>
       </div>
       <table class="set-table">
-        <thead><tr><th>Set</th><th>${unitLabel()}</th><th>Reps</th><th>✓</th></tr></thead>
+        <thead><tr><th>Set</th><th>${unitLabel()}</th><th>Reps</th><th>✓</th><th></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       <div class="set-row-actions">
@@ -2723,16 +2741,30 @@ function renderExerciseBlocks(){
 // Delegated events inside the active session (inputs + buttons are re-rendered often)
 document.getElementById('exerciseBlocks').addEventListener('click', async (e)=>{
   const addSetBtn = e.target.closest('[data-action="add-set"]');
+  const removeSetBtn = e.target.closest('[data-action="remove-set"]');
   const toggleBtn = e.target.closest('[data-action="toggle-set"]');
   const removeBtn = e.target.closest('[data-action="remove-ex"]');
   const restMinusBtn = e.target.closest('[data-action="rest-minus"]');
   const restPlusBtn = e.target.closest('[data-action="rest-plus"]');
+  const restEditBtn = e.target.closest('[data-action="rest-edit"]');
 
   if(addSetBtn){
     const exIdx = +addSetBtn.dataset.ex;
     const sets = activeWorkout.exercises[exIdx].sets;
     const last = sets[sets.length-1];
     sets.push({weight: last ? last.weight : '', reps: last ? last.reps : '', done:false});
+    await persistActiveWorkout();
+    renderExerciseBlocks();
+  }
+  if(removeSetBtn){
+    // Undoing an accidental "+ Add Set" tap without having to delete and re-add the whole
+    // exercise. Kept to a plain button rather than swipe-to-delete — a swipe gesture risks
+    // misfiring against the table's own scroll/tap targets on iOS Safari, where a button can't.
+    const row = removeSetBtn.closest('tr');
+    const exIdx = +row.dataset.ex, sIdx = +row.dataset.set;
+    const sets = activeWorkout.exercises[exIdx].sets;
+    if(sets.length <= 1) return; // always keep at least one set — removing the exercise itself is a separate action
+    sets.splice(sIdx, 1);
     await persistActiveWorkout();
     renderExerciseBlocks();
   }
@@ -2743,12 +2775,24 @@ document.getElementById('exerciseBlocks').addEventListener('click', async (e)=>{
     renderExerciseBlocks();
   }
   if(restMinusBtn || restPlusBtn){
+    // Targeted update instead of a full renderExerciseBlocks() — same fix as the template
+    // builder's rest steppers: re-rendering the whole exercise list on every tap was resetting
+    // page scroll back up, which is its own annoyance mid-workout.
     const exIdx = +(restMinusBtn || restPlusBtn).dataset.ex;
     const ex = activeWorkout.exercises[exIdx];
     const current = ex.restSeconds || 90;
     ex.restSeconds = restPlusBtn ? current + 15 : Math.max(15, current - 15);
     await persistActiveWorkout();
-    renderExerciseBlocks();
+    (restMinusBtn || restPlusBtn).closest('.rest-control').querySelector('.rest-value').textContent = formatRestLabel(ex.restSeconds);
+  }
+  if(restEditBtn){
+    const exIdx = +restEditBtn.dataset.ex;
+    const ex = activeWorkout.exercises[exIdx];
+    const newSeconds = await appPromptRestTime(ex.restSeconds || 90);
+    if(newSeconds == null) return; // cancelled
+    ex.restSeconds = newSeconds;
+    await persistActiveWorkout();
+    restEditBtn.textContent = formatRestLabel(ex.restSeconds);
   }
   if(toggleBtn){
     const row = toggleBtn.closest('tr');
@@ -2896,7 +2940,7 @@ async function openExercisePicker(){
         await persistActiveWorkout();
         closeModal();
         renderExerciseBlocks();
-      }, ()=> openExercisePicker());
+      }, ()=> openExercisePicker(), activeWorkout._id);
     }, openExercisePicker);
   });
   searchInput.addEventListener('input', ()=>{ list.innerHTML = renderList(searchInput.value); });
@@ -2946,7 +2990,7 @@ async function openExercisePicker(){
       await persistActiveWorkout();
       closeModal();
       renderExerciseBlocks();
-    }, ()=> openExercisePicker());
+    }, ()=> openExercisePicker(), activeWorkout._id);
   });
 }
 
